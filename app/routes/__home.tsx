@@ -1,6 +1,8 @@
 import axios from "axios";
 import classNames from "classnames";
+import { useMatch } from "react-router";
 import {
+  useParams,
   json,
   Link,
   LoaderFunction,
@@ -27,6 +29,8 @@ export const loader: LoaderFunction = async () => {
 
 export default function Home() {
   const { tags } = useLoaderData<HomeLoader>();
+  const matchTagRoute = useMatch("/global/:tag");
+  const { tag } = useParams();
 
   return (
     <div className="home-page">
@@ -43,7 +47,8 @@ export default function Home() {
               <ul className="nav nav-pills outline-active">
                 <li className="nav-item">
                   <NavLink
-                    to="/feed"
+                    prefetch="intent"
+                    to="feed"
                     className={({ isActive }) =>
                       classNames("nav-link", { active: isActive })
                     }
@@ -53,7 +58,9 @@ export default function Home() {
                 </li>
                 <li className="nav-item">
                   <NavLink
-                    to="/global"
+                    prefetch="intent"
+                    to="global"
+                    end
                     className={({ isActive }) =>
                       classNames("nav-link", { active: isActive })
                     }
@@ -61,6 +68,19 @@ export default function Home() {
                     Global Feed
                   </NavLink>
                 </li>
+                {matchTagRoute && (
+                  <li className="nav-item">
+                    <NavLink
+                      prefetch="intent"
+                      to="global"
+                      className={({ isActive }) =>
+                        classNames("nav-link", { active: isActive })
+                      }
+                    >
+                      # {tag}
+                    </NavLink>
+                  </li>
+                )}
               </ul>
             </div>
             <Outlet />

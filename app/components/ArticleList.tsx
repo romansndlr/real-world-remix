@@ -8,7 +8,7 @@ const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
 
   return (
     <div>
-      {isEmpty(articles) && (
+      {isEmpty(articles) && state === "idle" && (
         <div className="article-preview">
           <p>No articles are here... yet.</p>
         </div>

@@ -1,18 +1,26 @@
 import * as React from "react";
 import {
+  json,
   Link,
   Links,
   LiveReload,
+  LoaderFunction,
   Meta,
+  NavLink,
   Outlet,
   Scripts,
   ScrollRestoration,
   useCatch,
+  useLoaderData,
   useLocation,
 } from "remix";
 import type { LinksFunction } from "remix";
+import classNames from "classnames";
+import { useMatch } from "react-router";
+import { getSession } from "./sessions";
+import { User } from "./models";
 
-export let links: LinksFunction = () => {
+export const links: LinksFunction = () => {
   return [
     {
       rel: "stylesheet",
@@ -26,10 +34,20 @@ export let links: LinksFunction = () => {
   ];
 };
 
+export const loader: LoaderFunction = async ({ request }) => {
+  const session = await getSession(request);
+
+  const user = session.get("user");
+
+  return json({ user });
+};
+
 export default function App() {
+  const { user } = useLoaderData();
+
   return (
     <Document title="Conduit">
-      <Layout>
+      <Layout user={user}>
         <Outlet />
       </Layout>
     </Document>
@@ -63,7 +81,11 @@ function Document({
   );
 }
 
-function Layout({ children }: React.PropsWithChildren<{}>) {
+function Layout({ children, user }: React.PropsWithChildren<{ user: User }>) {
+  const matchFeed = useMatch("/feed");
+  const matchGlobal = useMatch("/global");
+  const matchTag = useMatch("/global/:tag");
+
   return (
     <div>
       <header>
@@ -74,30 +96,82 @@ function Layout({ children }: React.PropsWithChildren<{}>) {
             </Link>
             <ul className="nav navbar-nav pull-xs-right">
               <li className="nav-item">
-                <Link className="nav-link active" to="/">
+                <NavLink
+                  prefetch="intent"
+                  className={classNames("nav-link", {
+                    active: matchFeed || matchGlobal || matchTag,
+                  })}
+                  to="/"
+                >
                   Home
-                </Link>
+                </NavLink>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/editor">
-                  <i className="ion-compose"></i>&nbsp;New Article
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/settings">
-                  <i className="ion-gear-a"></i>&nbsp;Settings
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/login">
-                  Sign in
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/register">
-                  Sign up
-                </Link>
-              </li>
+              {user && (
+                <>
+                  <li className="nav-item">
+                    <NavLink
+                      prefetch="intent"
+                      className={({ isActive }) =>
+                        classNames("nav-link", { active: isActive })
+                      }
+                      to="editor"
+                    >
+                      <i className="ion-compose"></i>&nbsp;New Article
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <NavLink
+                      prefetch="intent"
+                      className={({ isActive }) =>
+                        classNames("nav-link", { active: isActive })
+                      }
+                      to="settings"
+                    >
+                      <i className="ion-gear-a"></i>&nbsp;Settings
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <NavLink className="nav-link" to={`/@${user?.username}`}>
+                      <img
+                        style={{
+                          width: 24,
+                          height: 24,
+                          marginRight: 4,
+                          borderRadius: "50%",
+                        }}
+                        src={user?.image}
+                      />
+                      {user?.username}
+                    </NavLink>
+                  </li>
+                </>
+              )}
+              {!user && (
+                <>
+                  <li className="nav-item">
+                    <NavLink
+                      prefetch="intent"
+                      className={({ isActive }) =>
+                        classNames("nav-link", { active: isActive })
+                      }
+                      to="login"
+                    >
+                      Sign in
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <NavLink
+                      prefetch="intent"
+                      className={({ isActive }) =>
+                        classNames("nav-link", { active: isActive })
+                      }
+                      to="register"
+                    >
+                      Sign up
+                    </NavLink>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </nav>
