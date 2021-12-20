@@ -1,4 +1,3 @@
-import React from "react";
 import axios from "axios";
 import classNames from "classnames";
 import {
@@ -15,9 +14,15 @@ interface HomeLoader {
 }
 
 export const loader: LoaderFunction = async () => {
-  const { data } = await axios.get("https://api.realworld.io/api/tags");
+  try {
+    const { data } = await axios.get("https://api.realworld.io/api/tags");
 
-  return json(data);
+    return json(data);
+  } catch (error) {
+    //
+  }
+
+  return json({ tags: [] });
 };
 
 export default function Home() {
@@ -48,7 +53,7 @@ export default function Home() {
                 </li>
                 <li className="nav-item">
                   <NavLink
-                    to="/"
+                    to="/global"
                     className={({ isActive }) =>
                       classNames("nav-link", { active: isActive })
                     }

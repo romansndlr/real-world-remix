@@ -1,3 +1,4 @@
+import isEmpty from "lodash/isEmpty";
 import * as React from "react";
 import { Link, useTransition } from "remix";
 import { Article } from "~/models";
@@ -7,6 +8,11 @@ const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
 
   return (
     <div>
+      {isEmpty(articles) && (
+        <div className="article-preview">
+          <p>No articles are here... yet.</p>
+        </div>
+      )}
       {articles.map((article) => (
         <div className="article-preview" key={article.slug}>
           <div className="article-meta">

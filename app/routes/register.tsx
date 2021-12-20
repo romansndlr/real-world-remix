@@ -1,5 +1,6 @@
 import axios, { AxiosError, HeadersDefaults } from "axios";
 import { json, LoaderFunction, ActionFunction, useLoaderData } from "remix";
+import { ErrorMessages } from "~/components";
 import { getHeaders, getSession, redirectWithSession } from "../sessions";
 
 interface CommonHeaderProperties extends HeadersDefaults {
@@ -20,6 +21,7 @@ export const action: ActionFunction = async ({ request }) => {
   const session = await getSession(request);
 
   const form = await request.formData();
+
   const username = form.get("username");
   const email = form.get("email");
   const password = form.get("password");
@@ -37,13 +39,17 @@ export const action: ActionFunction = async ({ request }) => {
       axios.defaults.headers as CommonHeaderProperties
     ).Authorization = `Token ${data.user.token}`;
 
-    session.set("user", data?.user);
+    session.set("user", data.user);
   } catch (error: unknown | AxiosError) {
-    if (axios.isAxiosError(error) && "errors" in error?.response?.data) {
-      session.flash("errors", error?.response?.data.errors);
+    if (!axios.isAxiosError(error)) return;
 
-      return redirectWithSession("/register", session);
+    const errors = error?.response?.data.errors;
+
+    if (errors) {
+      session.flash("errors", errors);
     }
+
+    return redirectWithSession("/register", session);
   }
 
   return redirectWithSession("/", session);
@@ -61,17 +67,7 @@ export default function Register() {
             <p className="text-xs-center">
               <a href="">Have an account?</a>
             </p>
-
-            {errors && errors.length !== 0 && (
-              <ul className="error-messages">
-                {Object.entries(errors).map(([key, value]) => (
-                  <li key={`${key}-${value}`}>
-                    {key} {value}
-                  </li>
-                ))}
-              </ul>
-            )}
-
+            <ErrorMessages errors={errors} />
             <form method="post" action="/register">
               <fieldset className="form-group">
                 <input

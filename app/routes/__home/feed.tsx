@@ -1,27 +1,24 @@
 import axios from "axios";
 import { json, LoaderFunction, useLoaderData } from "remix";
-import ArticleList from "~/components";
+import { ArticleList } from "~/components";
 import { Article } from "~/models";
-import { getSession, redirectWithSession } from "~/sessions";
 
 interface HomeFeedLoader {
   articles: Array<Article>;
 }
 
-export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request);
+export const loader: LoaderFunction = async () => {
+  try {
+    const { data } = await axios.get(
+      "https://api.realworld.io/api/articles/feed"
+    );
 
-  const user = session.get("user");
-
-  if (!user) {
-    return redirectWithSession("/", session);
+    return json(data);
+  } catch (error) {
+    //
   }
 
-  const { data } = await axios.get(
-    "https://api.realworld.io/api/articles/feed"
-  );
-
-  return json(data);
+  return json({ articles: [] });
 };
 
 export default function HomeFeed() {
