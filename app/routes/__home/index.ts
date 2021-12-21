@@ -4,7 +4,7 @@ import { getSession } from "~/sessions";
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request);
 
-  const user = session.get("user");
+  const isAuth = session.get("token");
 
-  return redirect(user ? "/feed" : "/global");
+  return redirect(isAuth ? "/feed" : "/global");
 };

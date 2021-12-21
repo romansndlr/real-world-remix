@@ -1,20 +1,21 @@
-import axios, { AxiosError, HeadersDefaults } from "axios";
-import { json, LoaderFunction, ActionFunction, useLoaderData } from "remix";
+import axios, { AxiosError } from "axios";
+import React from "react";
+import {
+  LoaderFunction,
+  ActionFunction,
+  useLoaderData,
+  Form,
+  useTransition,
+} from "remix";
 import { ErrorMessages } from "~/components";
-import { getHeaders, getSession, redirectWithSession } from "../sessions";
-
-interface CommonHeaderProperties extends HeadersDefaults {
-  Authorization: string;
-}
+import { getSession, jsonWithSession, redirectWithSession } from "../sessions";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request);
 
-  const headers = await getHeaders(session);
+  const errors = session.get("register-form-errors");
 
-  const errors = session.get("errors");
-
-  return json({ errors }, { headers });
+  return jsonWithSession({ errors }, session);
 };
 
 export const action: ActionFunction = async ({ request }) => {
@@ -27,7 +28,7 @@ export const action: ActionFunction = async ({ request }) => {
   const password = form.get("password");
 
   try {
-    const { data } = await axios.post("https://api.realworld.io/api/users", {
+    const { data } = await axios.post("users", {
       user: {
         username,
         password,
@@ -35,18 +36,16 @@ export const action: ActionFunction = async ({ request }) => {
       },
     });
 
-    (
-      axios.defaults.headers as CommonHeaderProperties
-    ).Authorization = `Token ${data.user.token}`;
+    const token = data.user.token;
 
-    session.set("user", data.user);
+    session.set("token", token);
   } catch (error: unknown | AxiosError) {
     if (!axios.isAxiosError(error)) return;
 
     const errors = error?.response?.data.errors;
 
     if (errors) {
-      session.flash("errors", errors);
+      session.flash("register-form-errors", errors);
     }
 
     return redirectWithSession("/register", session);
@@ -57,6 +56,8 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function Register() {
   const { errors } = useLoaderData();
+  const { state } = useTransition();
+  const isSubmitting = React.useMemo(() => state === "submitting", [state]);
 
   return (
     <div className="auth-page">
@@ -68,8 +69,8 @@ export default function Register() {
               <a href="">Have an account?</a>
             </p>
             <ErrorMessages errors={errors} />
-            <form method="post" action="/register">
-              <fieldset className="form-group">
+            <Form method="post" action="/register" reloadDocument>
+              <fieldset className="form-group" disabled={isSubmitting}>
                 <input
                   name="username"
                   className="form-control form-control-lg"
@@ -77,7 +78,7 @@ export default function Register() {
                   placeholder="Your Name"
                 />
               </fieldset>
-              <fieldset className="form-group">
+              <fieldset className="form-group" disabled={isSubmitting}>
                 <input
                   name="email"
                   className="form-control form-control-lg"
@@ -85,7 +86,7 @@ export default function Register() {
                   placeholder="Email"
                 />
               </fieldset>
-              <fieldset className="form-group">
+              <fieldset className="form-group" disabled={isSubmitting}>
                 <input
                   name="password"
                   className="form-control form-control-lg"
@@ -93,10 +94,13 @@ export default function Register() {
                   placeholder="Password"
                 />
               </fieldset>
-              <button className="btn btn-lg btn-primary pull-xs-right">
+              <button
+                className="btn btn-lg btn-primary pull-xs-right"
+                disabled={isSubmitting}
+              >
                 Sign up
               </button>
-            </form>
+            </Form>
           </div>
         </div>
       </div>

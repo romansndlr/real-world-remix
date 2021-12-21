@@ -1,4 +1,4 @@
-import { createCookieSessionStorage, redirect, Session } from "remix";
+import { createCookieSessionStorage, json, redirect, Session } from "remix";
 
 const cookieSession = createCookieSessionStorage({
   cookie: {
@@ -13,16 +13,31 @@ async function getSession(request: Request): Promise<Session> {
   return await cookieSession.getSession(request.headers.get("Cookie"));
 }
 
-async function getHeaders(session: Session) {
-  return {
-    "Set-Cookie": await cookieSession.commitSession(session),
-  };
-}
-
 async function redirectWithSession(path: string, session: Session) {
-  const headers = await getHeaders(session);
-
-  return redirect(path, { headers });
+  return redirect(path, {
+    headers: {
+      "Set-Cookie": await cookieSession.commitSession(session),
+    },
+  });
 }
 
-export { getSession, getHeaders, redirectWithSession };
+async function jsonWithSession(data: any, session: Session) {
+  return json(data, {
+    headers: {
+      "Set-Cookie": await cookieSession.commitSession(session),
+    },
+  });
+}
+
+async function redirectAndDestroySession(path: string, session: Session) {
+  return redirect("/", {
+    headers: { "Set-Cookie": await cookieSession.destroySession(session) },
+  });
+}
+
+export {
+  getSession,
+  redirectWithSession,
+  redirectAndDestroySession,
+  jsonWithSession,
+};
