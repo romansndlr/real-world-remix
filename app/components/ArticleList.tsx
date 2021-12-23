@@ -37,6 +37,7 @@ const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
                 name="favorited"
                 value={article.favorited ? "1" : "0"}
               />
+              <input type="hidden" name="slug" value={article.slug} />
               <button
                 className={classNames("btn btn-sm pull-xs-right", {
                   "btn-outline-primary": !article.favorited,

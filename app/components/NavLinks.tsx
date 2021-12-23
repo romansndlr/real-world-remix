@@ -1,21 +1,19 @@
 import classNames from "classnames";
 import * as React from "react";
-import { NavLink } from "remix";
+import { NavLink, useMatches } from "remix";
 import { User } from "~/models";
 
 const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
-  const matchFeed = true;
-  const matchGlobal = true;
-  const matchTag = true;
-
   return (
     <ul className="nav navbar-nav pull-xs-right">
       <li className="nav-item">
         <NavLink
           prefetch="intent"
-          className={classNames("nav-link", {
-            active: matchFeed || matchGlobal || matchTag,
-          })}
+          className={({ isActive }) =>
+            classNames("nav-link", {
+              active: isActive,
+            })
+          }
           to="/"
         >
           Home
