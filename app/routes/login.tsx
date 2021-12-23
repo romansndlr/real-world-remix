@@ -21,7 +21,7 @@ interface LoginLoader {
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request);
 
-  return jsonWithSession(
+  return await jsonWithSession(
     {
       errors: session.get("login-form-errors") || {},
       values: session.get("login-form-values") || { email: "", password: "" },
@@ -44,7 +44,11 @@ export const action: ActionFunction = async ({ request }) => {
       user: { email, password },
     });
 
-    session.set("token", data.user.token);
+    const token = data.user.token;
+
+    session.set("token", token);
+
+    axios.defaults.headers.common["Authorization"] = `Token ${token}`;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const errors = error.response?.data.errors;
@@ -66,7 +70,10 @@ export default function Login() {
   const { errors, values } = useLoaderData<LoginLoader>();
   const { state } = useTransition();
 
-  const isSubmitting = React.useMemo(() => state === "submitting", [state]);
+  const isDisabled = React.useMemo(
+    () => ["submitting", "loading"].includes(state),
+    [state]
+  );
 
   return (
     <div className="auth-page">
@@ -78,8 +85,8 @@ export default function Login() {
               <a href="">Need an account?</a>
             </p>
             <ErrorMessages errors={errors} />
-            <Form method="post" action="/login" reloadDocument>
-              <fieldset className="form-group" disabled={isSubmitting}>
+            <Form method="post" action="/login">
+              <fieldset className="form-group" disabled={isDisabled}>
                 <input
                   defaultValue={values.email}
                   name="email"
@@ -89,7 +96,7 @@ export default function Login() {
                   required
                 />
               </fieldset>
-              <fieldset className="form-group" disabled={isSubmitting}>
+              <fieldset className="form-group" disabled={isDisabled}>
                 <input
                   defaultValue={values.password}
                   name="password"
@@ -100,7 +107,7 @@ export default function Login() {
                 />
               </fieldset>
               <button
-                disabled={isSubmitting}
+                disabled={isDisabled}
                 type="submit"
                 className="btn btn-lg btn-primary pull-xs-right"
               >

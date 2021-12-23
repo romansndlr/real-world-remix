@@ -15,7 +15,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const errors = session.get("register-form-errors");
 
-  return jsonWithSession({ errors }, session);
+  return await jsonWithSession({ errors }, session);
 };
 
 export const action: ActionFunction = async ({ request }) => {
@@ -39,6 +39,8 @@ export const action: ActionFunction = async ({ request }) => {
     const token = data.user.token;
 
     session.set("token", token);
+
+    axios.defaults.headers.common["Authorization"] = `Token ${token}`;
   } catch (error: unknown | AxiosError) {
     if (!axios.isAxiosError(error)) return;
 
@@ -57,7 +59,11 @@ export const action: ActionFunction = async ({ request }) => {
 export default function Register() {
   const { errors } = useLoaderData();
   const { state } = useTransition();
-  const isSubmitting = React.useMemo(() => state === "submitting", [state]);
+
+  const isDisabled = React.useMemo(
+    () => ["submitting", "loading"].includes(state),
+    [state]
+  );
 
   return (
     <div className="auth-page">
@@ -69,8 +75,8 @@ export default function Register() {
               <a href="">Have an account?</a>
             </p>
             <ErrorMessages errors={errors} />
-            <Form method="post" action="/register" reloadDocument>
-              <fieldset className="form-group" disabled={isSubmitting}>
+            <Form method="post" action="/register">
+              <fieldset className="form-group" disabled={isDisabled}>
                 <input
                   name="username"
                   className="form-control form-control-lg"
@@ -78,7 +84,7 @@ export default function Register() {
                   placeholder="Your Name"
                 />
               </fieldset>
-              <fieldset className="form-group" disabled={isSubmitting}>
+              <fieldset className="form-group" disabled={isDisabled}>
                 <input
                   name="email"
                   className="form-control form-control-lg"
@@ -86,7 +92,7 @@ export default function Register() {
                   placeholder="Email"
                 />
               </fieldset>
-              <fieldset className="form-group" disabled={isSubmitting}>
+              <fieldset className="form-group" disabled={isDisabled}>
                 <input
                   name="password"
                   className="form-control form-control-lg"
@@ -96,7 +102,7 @@ export default function Register() {
               </fieldset>
               <button
                 className="btn btn-lg btn-primary pull-xs-right"
-                disabled={isSubmitting}
+                disabled={isDisabled}
               >
                 Sign up
               </button>

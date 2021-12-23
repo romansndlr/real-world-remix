@@ -1,6 +1,5 @@
 import axios from "axios";
 import classNames from "classnames";
-import { useMatch } from "react-router";
 import {
   useParams,
   json,
@@ -10,26 +9,25 @@ import {
   useLoaderData,
   Outlet,
 } from "remix";
+import { getSession } from "~/sessions";
 
 interface HomeLoader {
   tags: string[];
+  isAuth: boolean;
 }
 
-export const loader: LoaderFunction = async () => {
-  try {
-    const { data } = await axios.get("https://api.realworld.io/api/tags");
+export const loader: LoaderFunction = async ({ request }) => {
+  const session = await getSession(request);
 
-    return json(data);
-  } catch (error) {
-    //
-  }
+  const { data } = await axios.get("tags");
 
-  return json({ tags: [] });
+  const isAuth = session.get("token");
+
+  return json({ ...data, isAuth });
 };
 
 export default function Home() {
-  const { tags } = useLoaderData<HomeLoader>();
-  const matchTagRoute = useMatch("/global/:tag");
+  const { tags, isAuth } = useLoaderData<HomeLoader>();
   const { tag } = useParams();
 
   return (
@@ -45,17 +43,19 @@ export default function Home() {
           <div className="col-md-9">
             <div className="feed-toggle">
               <ul className="nav nav-pills outline-active">
-                <li className="nav-item">
-                  <NavLink
-                    prefetch="intent"
-                    to="feed"
-                    className={({ isActive }) =>
-                      classNames("nav-link", { active: isActive })
-                    }
-                  >
-                    Your Feed
-                  </NavLink>
-                </li>
+                {isAuth && (
+                  <li className="nav-item">
+                    <NavLink
+                      prefetch="intent"
+                      to="feed"
+                      className={({ isActive }) =>
+                        classNames("nav-link", { active: isActive })
+                      }
+                    >
+                      Your Feed
+                    </NavLink>
+                  </li>
+                )}
                 <li className="nav-item">
                   <NavLink
                     prefetch="intent"
@@ -68,11 +68,11 @@ export default function Home() {
                     Global Feed
                   </NavLink>
                 </li>
-                {matchTagRoute && (
+                {tag && (
                   <li className="nav-item">
                     <NavLink
                       prefetch="intent"
-                      to="global"
+                      to={`/global/${tag}`}
                       className={({ isActive }) =>
                         classNames("nav-link", { active: isActive })
                       }

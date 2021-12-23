@@ -1,7 +1,7 @@
 import * as React from "react";
-import { json, LoaderFunction, Outlet, useLoaderData } from "remix";
+import { LoaderFunction, Outlet, useLoaderData } from "remix";
 import type { LinksFunction } from "remix";
-import { getSession, jsonWithSession, redirectWithSession } from "./sessions";
+import { getSession, jsonWithSession } from "./sessions";
 import axios from "axios";
 import { NavLinks, Document, Layout } from "./components";
 
@@ -26,26 +26,20 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const alert = session.get("alert");
 
-  axios.defaults.baseURL = "https://api.realworld.io/api/";
-
   if (!token) {
-    return jsonWithSession({ user: null }, session);
+    return await jsonWithSession({ user: null }, session);
   }
-
-  axios.defaults.headers.common["Authorization"] = `Token ${session.get(
-    "token"
-  )}`;
 
   try {
     const { data } = await axios.get("user");
 
-    return jsonWithSession({ user: data.user, alert }, session);
+    return await jsonWithSession({ user: data.user, alert }, session);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       session.flash("alert", error.response?.data);
     }
 
-    return jsonWithSession({ user: null }, session);
+    return await jsonWithSession({ user: null }, session);
   }
 };
 

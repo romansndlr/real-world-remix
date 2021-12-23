@@ -1,13 +1,12 @@
 import classNames from "classnames";
 import * as React from "react";
-import { useMatch } from "react-router";
 import { NavLink } from "remix";
 import { User } from "~/models";
 
 const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
-  const matchFeed = useMatch("/feed");
-  const matchGlobal = useMatch("/global");
-  const matchTag = useMatch("/global/:tag");
+  const matchFeed = true;
+  const matchGlobal = true;
+  const matchTag = true;
 
   return (
     <ul className="nav navbar-nav pull-xs-right">

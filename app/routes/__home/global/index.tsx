@@ -8,15 +8,9 @@ interface HomeGlobalLoader {
 }
 
 export const loader: LoaderFunction = async () => {
-  try {
-    const { data } = await axios.get("https://api.realworld.io/api/articles");
+  const { data } = await axios.get("https://api.realworld.io/api/articles");
 
-    return json(data);
-  } catch (error) {
-    //
-  }
-
-  return json({ articles: [] });
+  return json(data);
 };
 
 export default function HomeGlobal() {

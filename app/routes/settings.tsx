@@ -38,7 +38,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
     const { data } = await axios.get("user");
 
-    return jsonWithSession(
+    return await jsonWithSession(
       {
         user: data.user,
         errors: session.get("settings-form-errors") || {},
@@ -50,7 +50,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     if (axios.isAxiosError(error)) {
       session.flash("alert", error.response?.data);
 
-      return jsonWithSession(
+      return await jsonWithSession(
         { user: {}, values: defaultValues, errors: {} },
         session
       );
@@ -102,7 +102,10 @@ const Settings: React.FC = () => {
   const { user, errors, values } = useLoaderData<SettingsLoader>();
   const { state } = useTransition();
 
-  const isSubmitting = React.useMemo(() => state === "submitting", [state]);
+  const isDisabled = React.useMemo(
+    () => ["submitting", "loading"].includes(state),
+    [state]
+  );
 
   return (
     <div className="settings-page">
@@ -113,7 +116,7 @@ const Settings: React.FC = () => {
             <ErrorMessages errors={errors} />
             <Form action="/settings" method="put">
               <fieldset>
-                <fieldset className="form-group" disabled={isSubmitting}>
+                <fieldset className="form-group" disabled={isDisabled}>
                   <input
                     defaultValue={values.image || user.image}
                     name="image"
@@ -122,7 +125,7 @@ const Settings: React.FC = () => {
                     placeholder="URL of profile picture"
                   />
                 </fieldset>
-                <fieldset className="form-group" disabled={isSubmitting}>
+                <fieldset className="form-group" disabled={isDisabled}>
                   <input
                     defaultValue={values.username || user.username}
                     name="username"
@@ -132,7 +135,7 @@ const Settings: React.FC = () => {
                     required
                   />
                 </fieldset>
-                <fieldset className="form-group" disabled={isSubmitting}>
+                <fieldset className="form-group" disabled={isDisabled}>
                   <textarea
                     defaultValue={values.bio || user.bio}
                     name="bio"
@@ -141,7 +144,7 @@ const Settings: React.FC = () => {
                     placeholder="Short bio about you"
                   ></textarea>
                 </fieldset>
-                <fieldset className="form-group" disabled={isSubmitting}>
+                <fieldset className="form-group" disabled={isDisabled}>
                   <input
                     defaultValue={values.email || user.email}
                     name="email"
@@ -151,7 +154,7 @@ const Settings: React.FC = () => {
                     required
                   />
                 </fieldset>
-                <fieldset className="form-group" disabled={isSubmitting}>
+                <fieldset className="form-group" disabled={isDisabled}>
                   <input
                     name="password"
                     className="form-control form-control-lg"
@@ -160,7 +163,7 @@ const Settings: React.FC = () => {
                   />
                 </fieldset>
                 <button
-                  disabled={isSubmitting}
+                  disabled={isDisabled}
                   type="submit"
                   className="btn btn-lg btn-primary pull-xs-right"
                 >
@@ -169,11 +172,15 @@ const Settings: React.FC = () => {
               </fieldset>
             </Form>
             <hr />
-            <form method="post" action="/logout">
-              <button type="submit" className="btn btn-outline-danger">
+            <Form method="post" action="/logout">
+              <button
+                type="submit"
+                className="btn btn-outline-danger"
+                disabled={isDisabled}
+              >
                 Or click here to logout.
               </button>
-            </form>
+            </Form>
           </div>
         </div>
       </div>

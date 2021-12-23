@@ -1,10 +1,11 @@
-import isEmpty from "lodash/isEmpty";
 import * as React from "react";
-import { Link, useTransition } from "remix";
+import isEmpty from "lodash/isEmpty";
+import { Form, Link, useTransition } from "remix";
 import { Article } from "~/models";
+import classNames from "classnames";
 
 const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
-  const { state } = useTransition();
+  const { state, submission } = useTransition();
 
   return (
     <div>
@@ -30,9 +31,22 @@ const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
                 {new Date(article.createdAt).toLocaleDateString()}
               </span>
             </div>
-            <button className="btn btn-outline-primary btn-sm pull-xs-right">
-              <i className="ion-heart"></i> {article.favoritesCount}
-            </button>
+            <Form method="post" action="/favorite-article">
+              <input
+                type="hidden"
+                name="favorited"
+                value={article.favorited ? "1" : "0"}
+              />
+              <button
+                className={classNames("btn btn-sm pull-xs-right", {
+                  "btn-outline-primary": !article.favorited,
+                  "btn-primary": article.favorited,
+                })}
+                disabled={submission as unknown as boolean}
+              >
+                <i className="ion-heart"></i> {article.favoritesCount}
+              </button>
+            </Form>
           </div>
           <Link to={`/article/${article.slug}`} className="preview-link">
             <h1>{article.title}</h1>
@@ -41,7 +55,7 @@ const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
           </Link>
         </div>
       ))}
-      {(state === "loading" || state === "submitting") && (
+      {state === "loading" && (
         <div className="article-preview">
           <p>Loading...</p>
         </div>

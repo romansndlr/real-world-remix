@@ -1,6 +1,7 @@
 import { renderToString } from "react-dom/server";
 import { RemixServer } from "remix";
 import type { EntryContext } from "remix";
+import axios from "axios";
 
 export default function handleRequest(
   request: Request,
@@ -8,6 +9,8 @@ export default function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext
 ) {
+  axios.defaults.baseURL = "https://api.realworld.io/api/";
+
   let markup = renderToString(
     <RemixServer context={remixContext} url={request.url} />
   );
