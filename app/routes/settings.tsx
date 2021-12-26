@@ -1,19 +1,25 @@
-import axios from "axios";
 import * as React from "react";
+import { User } from "@prisma/client";
 import {
   ActionFunction,
   Form,
   json,
   LoaderFunction,
+  redirect,
+  useActionData,
   useLoaderData,
   useTransition,
 } from "remix";
+import * as Yup from "yup";
 import { ErrorMessages } from "~/components";
-import { User } from "~/models";
-import { getSession, jsonWithSession, redirectWithSession } from "~/sessions";
+import { db, getSession } from "~/utils";
+import { isNil, omitBy } from "lodash";
 
 interface SettingsLoader {
   user: User;
+}
+
+interface SettingsAction {
   errors: unknown;
   values: {
     username: string;
@@ -32,80 +38,75 @@ const defaultValues = {
   image: "",
 };
 
+let validationSchema = Yup.object().shape({
+  username: Yup.string().min(3).max(25).required(),
+  email: Yup.string().email().required(),
+  bio: Yup.string(),
+  password: Yup.string()
+    .min(6)
+    .matches(/[a-zA-Z1-9]/),
+  image: Yup.string().url().required(),
+});
+
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession(request.headers.get("Cookie"));
 
-  try {
-    const { data } = await axios.get("user");
+  const userId = session.get("userId");
 
-    return await jsonWithSession(
-      {
-        user: data.user,
-        errors: session.get("settings-form-errors") || {},
-        values: session.get("settings-form-values") || defaultValues,
-      },
-      session
-    );
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      session.flash("alert", error.response?.data);
+  const user = await db.user.findUnique({ where: { id: userId } });
 
-      return await jsonWithSession(
-        { user: {}, values: defaultValues, errors: {} },
-        session
-      );
-    }
-  }
+  return json({ user });
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession(request.headers.get("Cookie"));
+
+  const userId = session.get("userId");
 
   const form = await request.formData();
 
-  const username = form.get("username");
-  const email = form.get("email");
-  const password = form.get("password");
-  const bio = form.get("bio");
-  const image = form.get("image");
+  const username = form.get("username") || null;
+  const email = form.get("email") || null;
+  const password = form.get("password") || null;
+  const bio = form.get("bio") || null;
+  const image = form.get("image") || null;
 
-  const user = {
-    username,
-    email,
-    password,
-    bio,
-    image,
-  };
+  const user = omitBy(
+    {
+      username,
+      email,
+      password,
+      bio,
+      image,
+    },
+    isNil
+  );
 
   try {
-    await axios.put("user", { user });
+    await validationSchema.validateSync(user);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const errors = error.response?.data.errors;
-      const status = error.response?.status;
-
-      if (errors && status === 403) {
-        session.flash("settings-form-errors", errors);
-        session.flash("settings-form-values", user);
-      } else {
-        session.flash("alert", error?.message);
-      }
+    if (error instanceof Yup.ValidationError) {
+      return json({
+        errors: error.errors,
+        values: user,
+      });
     }
-
-    return redirectWithSession("/settings", session);
   }
 
-  return redirectWithSession(`/settings`, session);
+  await db.user.update({
+    where: {
+      id: userId,
+    },
+    data: user,
+  });
+
+  return redirect(`/settings`);
 };
 
 const Settings: React.FC = () => {
-  const { user, errors, values } = useLoaderData<SettingsLoader>();
-  const { state } = useTransition();
-
-  const isDisabled = React.useMemo(
-    () => ["submitting", "loading"].includes(state),
-    [state]
-  );
+  const { user } = useLoaderData<SettingsLoader>();
+  const data = useActionData<SettingsAction>();
+  const { submission } = useTransition();
 
   return (
     <div className="settings-page">
@@ -113,21 +114,27 @@ const Settings: React.FC = () => {
         <div className="row">
           <div className="col-md-6 offset-md-3 col-xs-12">
             <h1 className="text-xs-center">Your Settings</h1>
-            <ErrorMessages errors={errors} />
+            <ErrorMessages errors={data?.errors} />
             <Form action="/settings" method="put">
               <fieldset>
-                <fieldset className="form-group" disabled={isDisabled}>
+                <fieldset className="form-group" disabled={!!submission}>
                   <input
-                    defaultValue={values.image || user.image}
+                    defaultValue={
+                      data?.values.image || user.image || defaultValues.image
+                    }
                     name="image"
                     className="form-control"
                     type="text"
                     placeholder="URL of profile picture"
                   />
                 </fieldset>
-                <fieldset className="form-group" disabled={isDisabled}>
+                <fieldset className="form-group" disabled={!!submission}>
                   <input
-                    defaultValue={values.username || user.username}
+                    defaultValue={
+                      data?.values.username ||
+                      user.username ||
+                      defaultValues.username
+                    }
                     name="username"
                     className="form-control form-control-lg"
                     type="text"
@@ -135,18 +142,22 @@ const Settings: React.FC = () => {
                     required
                   />
                 </fieldset>
-                <fieldset className="form-group" disabled={isDisabled}>
+                <fieldset className="form-group" disabled={!!submission}>
                   <textarea
-                    defaultValue={values.bio || user.bio}
+                    defaultValue={
+                      data?.values.bio || user.bio || defaultValues.bio
+                    }
                     name="bio"
                     className="form-control form-control-lg"
                     rows={8}
                     placeholder="Short bio about you"
                   ></textarea>
                 </fieldset>
-                <fieldset className="form-group" disabled={isDisabled}>
+                <fieldset className="form-group" disabled={!!submission}>
                   <input
-                    defaultValue={values.email || user.email}
+                    defaultValue={
+                      data?.values.email || user.email || defaultValues.email
+                    }
                     name="email"
                     className="form-control form-control-lg"
                     type="email"
@@ -154,7 +165,7 @@ const Settings: React.FC = () => {
                     required
                   />
                 </fieldset>
-                <fieldset className="form-group" disabled={isDisabled}>
+                <fieldset className="form-group" disabled={!!submission}>
                   <input
                     name="password"
                     className="form-control form-control-lg"
@@ -163,7 +174,7 @@ const Settings: React.FC = () => {
                   />
                 </fieldset>
                 <button
-                  disabled={isDisabled}
+                  disabled={!!submission}
                   type="submit"
                   className="btn btn-lg btn-primary pull-xs-right"
                 >
@@ -176,7 +187,7 @@ const Settings: React.FC = () => {
               <button
                 type="submit"
                 className="btn btn-outline-danger"
-                disabled={isDisabled}
+                disabled={!!submission}
               >
                 Or click here to logout.
               </button>

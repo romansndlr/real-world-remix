@@ -1,11 +1,12 @@
-import axios from "axios";
-import { ActionFunction } from "remix";
-import { getSession, redirectAndDestroySession } from "~/sessions";
+import { ActionFunction, redirect } from "remix";
+import { destroySession, getSession } from "~/utils";
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession(request.headers.get("Cookie"));
 
-  delete axios.defaults.headers.common["Authorization"];
-
-  return redirectAndDestroySession("/", session);
+  return redirect("/", {
+    headers: {
+      "Set-Cookie": await destroySession(session),
+    },
+  });
 };

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,4 +5,58 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int         @id @default(autoincrement())
+  email    String      @unique
+  username String      @unique
+  password String
+  bio      String?
+  image    String?     @default("https://api.realworld.io/images/smiley-cyrus.jpeg")
+  comments Comment[]
+  articles Article[]
+  favorits Favorites[]
+}
+
+model Tag {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  articles Article[]
+}
+
+model Article {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String
+  body        String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      Int
+  comments    Comment[]
+  tags        Tag[]
+  author      User        @relation(fields: [userId], references: [id])
+  favorited   Favorites[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  body      String
+  authorId  String
+  articleId Int?
+  commentId String?
+  userId    Int
+  author    User     @relation(fields: [userId], references: [id])
+  Article   Article? @relation(fields: [articleId], references: [id])
+}
+
+model Favorites {
+  userId    Int
+  articleId Int
+  user      User    @relation(fields: [userId], references: [id])
+  article   Article @relation(fields: [articleId], references: [id])
+
+  @@id([userId, articleId])
 }

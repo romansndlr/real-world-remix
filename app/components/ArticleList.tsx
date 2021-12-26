@@ -1,11 +1,19 @@
-import * as React from "react";
+import { useSearchParams, useTransition } from "remix";
+import { Article, Favorites, Tag, User } from "@prisma/client";
 import isEmpty from "lodash/isEmpty";
-import { Form, Link, useTransition } from "remix";
-import { Article } from "~/models";
-import classNames from "classnames";
+import ArticlePreview from "./ArticlePreview";
 
-const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
-  const { state, submission } = useTransition();
+const ArticleList: React.FC<{
+  articles: Array<
+    Article & { author: User; tags: Tag[]; favorited: Favorites[] }
+  >;
+  articlesCount: number;
+  authUser?: User;
+}> = ({ articles, authUser, articlesCount }) => {
+  const { state } = useTransition();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const offset = searchParams.get("offset");
 
   return (
     <div>
@@ -15,52 +23,43 @@ const ArticleList: React.FC<{ articles: Array<Article> }> = ({ articles }) => {
         </div>
       )}
       {articles.map((article) => (
-        <div className="article-preview" key={article.slug}>
-          <div className="article-meta">
-            <Link to={`/profile/${article.author.username}`}>
-              <img src="http://i.imgur.com/Qr71crq.jpg" />
-            </Link>
-            <div className="info">
-              <Link
-                to={`/profile/${article.author.username}`}
-                className="author"
-              >
-                {article.author.username}
-              </Link>
-              <span className="date">
-                {new Date(article.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-            <Form method="post" action="/favorite-article">
-              <input
-                type="hidden"
-                name="favorited"
-                value={article.favorited ? "1" : "0"}
-              />
-              <input type="hidden" name="slug" value={article.slug} />
-              <button
-                className={classNames("btn btn-sm pull-xs-right", {
-                  "btn-outline-primary": !article.favorited,
-                  "btn-primary": article.favorited,
-                })}
-                disabled={submission as unknown as boolean}
-              >
-                <i className="ion-heart"></i> {article.favoritesCount}
-              </button>
-            </Form>
-          </div>
-          <Link to={`/article/${article.slug}`} className="preview-link">
-            <h1>{article.title}</h1>
-            <p>{article.description}</p>
-            <span>Read more...</span>
-          </Link>
-        </div>
+        <ArticlePreview
+          article={article}
+          authUser={authUser}
+          key={article.id}
+        />
       ))}
       {state === "loading" && (
         <div className="article-preview">
           <p>Loading...</p>
         </div>
       )}
+      <nav>
+        <ul className="pagination">
+          {Array.from({ length: articlesCount }, (_, i) => (
+            <li
+              className={
+                Number(offset) === i ? "page-item active" : "page-item"
+              }
+              key={i}
+            >
+              <button
+                type="button"
+                className="page-link"
+                onClick={() => {
+                  const updatedParams = new URLSearchParams();
+
+                  updatedParams.set("offset", String(i));
+
+                  setSearchParams(updatedParams);
+                }}
+              >
+                {i + 1}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 };

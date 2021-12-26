@@ -1,16 +1,17 @@
-import axios from "axios";
-import React from "react";
 import {
   ActionFunction,
   Form,
-  LoaderFunction,
-  useLoaderData,
+  json,
+  redirect,
+  useActionData,
   useTransition,
 } from "remix";
+import * as Yup from "yup";
 import { ErrorMessages } from "~/components";
-import { getSession, jsonWithSession, redirectWithSession } from "~/sessions";
+import { login } from "~/services";
+import { commitSession, getSession, ValidationError } from "~/utils";
 
-interface LoginLoader {
+interface LoginAction {
   errors: unknown;
   values: {
     email: string;
@@ -18,62 +19,65 @@ interface LoginLoader {
   };
 }
 
-export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request);
-
-  return await jsonWithSession(
-    {
-      errors: session.get("login-form-errors") || {},
-      values: session.get("login-form-values") || { email: "", password: "" },
-    },
-    session
-  );
-};
+let validationSchema = Yup.object().shape({
+  email: Yup.string().email().required(),
+  password: Yup.string()
+    .required()
+    .min(6)
+    .matches(/[a-zA-Z1-9]/),
+});
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession();
 
   const form = await request.formData();
 
-  const email = form.get("email");
-
-  const password = form.get("password");
+  const email = form.get("email") as string;
+  const password = form.get("password") as string;
 
   try {
-    const { data } = await axios.post("users/login", {
-      user: { email, password },
+    validationSchema.validateSync({
+      email,
+      password,
     });
-
-    const token = data.user.token;
-
-    session.set("token", token);
-
-    axios.defaults.headers.common["Authorization"] = `Token ${token}`;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const errors = error.response?.data.errors;
-      const status = error.response?.status;
-
-      if (errors && status === 403) {
-        session.flash("login-form-errors", errors);
-        session.flash("login-form-values", { email, password });
-      }
+    if (error instanceof Yup.ValidationError) {
+      return json({
+        errors: error.errors,
+        values: {
+          email,
+          password,
+        },
+      });
     }
-
-    return redirectWithSession("/login", session);
   }
 
-  return redirectWithSession("/", session);
+  try {
+    const user = await login({ email, password });
+
+    session.set("userId", user.id);
+
+    return redirect("/", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return json({
+        errors: error.errors,
+        values: {
+          email,
+          password,
+        },
+      });
+    }
+  }
 };
 
 export default function Login() {
-  const { errors, values } = useLoaderData<LoginLoader>();
-  const { state } = useTransition();
-
-  const isDisabled = React.useMemo(
-    () => ["submitting", "loading"].includes(state),
-    [state]
-  );
+  const data = useActionData<LoginAction>();
+  const { submission } = useTransition();
 
   return (
     <div className="auth-page">
@@ -84,11 +88,11 @@ export default function Login() {
             <p className="text-xs-center">
               <a href="">Need an account?</a>
             </p>
-            <ErrorMessages errors={errors} />
+            <ErrorMessages errors={data?.errors} />
             <Form method="post" action="/login">
-              <fieldset className="form-group" disabled={isDisabled}>
+              <fieldset className="form-group" disabled={!!submission}>
                 <input
-                  defaultValue={values.email}
+                  defaultValue={data?.values.email}
                   name="email"
                   className="form-control form-control-lg"
                   type="email"
@@ -96,9 +100,9 @@ export default function Login() {
                   required
                 />
               </fieldset>
-              <fieldset className="form-group" disabled={isDisabled}>
+              <fieldset className="form-group" disabled={!!submission}>
                 <input
-                  defaultValue={values.password}
+                  defaultValue={data?.values.password}
                   name="password"
                   className="form-control form-control-lg"
                   type="password"
@@ -107,7 +111,7 @@ export default function Login() {
                 />
               </fieldset>
               <button
-                disabled={isDisabled}
+                disabled={!!submission}
                 type="submit"
                 className="btn btn-lg btn-primary pull-xs-right"
               >

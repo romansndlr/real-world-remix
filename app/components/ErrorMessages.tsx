@@ -8,9 +8,7 @@ const ErrorMessages: React.FC<{ errors: unknown }> = ({ errors }) => {
     <ul className="error-messages">
       {isObject(errors) &&
         Object.entries(errors).map(([key, value]) => (
-          <li key={`${key}-${value}`}>
-            {key} {value}
-          </li>
+          <li key={`${key}-${value}`}>{value}</li>
         ))}
     </ul>
   );

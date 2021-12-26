@@ -1,22 +1,41 @@
-import axios from "axios";
 import { ActionFunction, redirect } from "remix";
-import { getSession, redirectWithSession } from "~/sessions";
+import { db, getSession } from "~/utils";
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession(request.headers.get("Cookie"));
 
-  const token = session.get("token");
+  const userId = session.get("userId");
 
-  if (!token) {
-    return redirectWithSession("/login", session);
+  if (!userId) {
+    return redirect("/login");
   }
 
   const form = await request.formData();
 
   const favorited = form.get("favorited");
-  const slug = form.get("slug");
 
-  await axios[!!favorited ? "delete" : "post"](`/articles/${slug}/favorite`);
+  const articleId = form.get("id");
 
-  return redirect("..");
+  const referer = form.get("referer") as string;
+
+  await db.article.update({
+    where: {
+      id: Number(articleId),
+    },
+    data: {
+      favorited: !!favorited
+        ? {
+            deleteMany: {
+              userId: Number(userId),
+            },
+          }
+        : {
+            create: {
+              userId,
+            },
+          },
+    },
+  });
+
+  return redirect(referer);
 };

@@ -1,4 +1,4 @@
-import axios from "axios";
+import { Tag } from "@prisma/client";
 import classNames from "classnames";
 import {
   useParams,
@@ -9,25 +9,25 @@ import {
   useLoaderData,
   Outlet,
 } from "remix";
-import { getSession } from "~/sessions";
+import { db, getSession } from "~/utils";
 
 interface HomeLoader {
-  tags: string[];
-  isAuth: boolean;
+  tags: Tag[];
+  userId: number;
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession(request.headers.get("Cookie"));
 
-  const { data } = await axios.get("tags");
+  const userId = session.get("userId");
 
-  const isAuth = session.get("token");
+  const tags = await db.tag.findMany();
 
-  return json({ ...data, isAuth });
+  return json({ tags, userId });
 };
 
 export default function Home() {
-  const { tags, isAuth } = useLoaderData<HomeLoader>();
+  const { tags, userId } = useLoaderData<HomeLoader>();
   const { tag } = useParams();
 
   return (
@@ -43,7 +43,7 @@ export default function Home() {
           <div className="col-md-9">
             <div className="feed-toggle">
               <ul className="nav nav-pills outline-active">
-                {isAuth && (
+                {userId && (
                   <li className="nav-item">
                     <NavLink
                       prefetch="intent"
@@ -73,9 +73,7 @@ export default function Home() {
                     <NavLink
                       prefetch="intent"
                       to={`/global/${tag}`}
-                      className={({ isActive }) =>
-                        classNames("nav-link", { active: isActive })
-                      }
+                      className="nav-link active"
                     >
                       # {tag}
                     </NavLink>
@@ -91,8 +89,12 @@ export default function Home() {
               <div className="tag-list">
                 {tags.length === 0 && <p>No tags are here... yet.</p>}
                 {tags.map((tag, i) => (
-                  <Link to={`/${tag}`} className="tag-pill tag-default" key={i}>
-                    {tag}
+                  <Link
+                    to={`/global/${tag.name}`}
+                    className="tag-pill tag-default"
+                    key={i}
+                  >
+                    {tag.name}
                   </Link>
                 ))}
               </div>

@@ -6,20 +6,22 @@ import {
   useLoaderData,
   Form,
   useTransition,
+  json,
+  redirect,
 } from "remix";
 import { ErrorMessages } from "~/components";
-import { getSession, jsonWithSession, redirectWithSession } from "../sessions";
+import { getSession } from "~/utils";
 
-export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request);
+export const loader: LoaderFunction = async () => {
+  const session = await getSession();
 
   const errors = session.get("register-form-errors");
 
-  return await jsonWithSession({ errors }, session);
+  return await json({ errors });
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession();
 
   const form = await request.formData();
 
@@ -50,10 +52,10 @@ export const action: ActionFunction = async ({ request }) => {
       session.flash("register-form-errors", errors);
     }
 
-    return redirectWithSession("/register", session);
+    return redirect("/register");
   }
 
-  return redirectWithSession("/", session);
+  return redirect("/");
 };
 
 export default function Register() {

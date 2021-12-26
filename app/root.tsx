@@ -1,9 +1,7 @@
-import * as React from "react";
-import { LoaderFunction, Outlet, useLoaderData } from "remix";
+import { json, LoaderFunction, Outlet, useLoaderData } from "remix";
 import type { LinksFunction } from "remix";
-import { getSession, jsonWithSession } from "./sessions";
-import axios from "axios";
 import { NavLinks, Document, Layout } from "./components";
+import { db, getSession } from "./utils";
 
 export const links: LinksFunction = () => {
   return [
@@ -20,27 +18,19 @@ export const links: LinksFunction = () => {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request);
+  const session = await getSession(request.headers.get("Cookie"));
 
-  const token = session.get("token");
+  const userId = session.get("userId");
 
   const alert = session.get("alert");
 
-  if (!token) {
-    return await jsonWithSession({ user: null }, session);
+  if (!userId) {
+    return json({ user: null, alert });
   }
 
-  try {
-    const { data } = await axios.get("user");
+  const user = await db.user.findUnique({ where: { id: userId } });
 
-    return await jsonWithSession({ user: data.user, alert }, session);
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      session.flash("alert", error.response?.data);
-    }
-
-    return await jsonWithSession({ user: null }, session);
-  }
+  return json({ user, alert });
 };
 
 export default function App() {
