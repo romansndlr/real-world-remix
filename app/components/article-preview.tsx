@@ -1,18 +1,11 @@
-import { Form, Link, useLocation, useTransition } from "remix";
-import classNames from "classnames";
+import { Link } from "remix";
 import { Article, Favorites, Tag, User } from "@prisma/client";
+import { FavoriteArticleButton } from ".";
 
 const ArticlePreview: React.FC<{
   article: Article & { author: User; tags: Tag[]; favorited: Favorites[] };
   authUser?: User;
 }> = ({ article, authUser }) => {
-  const { submission } = useTransition();
-  const location = useLocation();
-
-  const formData = submission?.formData;
-
-  const isSubmitting = Number(formData?.get("id")) === Number(article.id);
-
   const isFavorited = article.favorited.find(
     ({ userId }) => userId === authUser?.id
   );
@@ -31,28 +24,13 @@ const ArticlePreview: React.FC<{
             {new Date(article.createdAt).toLocaleDateString()}
           </span>
         </div>
-        <Form
-          key={`favorite-article-${article.id}-form`}
-          method="post"
-          action="/favorite-article"
+        <FavoriteArticleButton
+          articleId={article.id}
+          isFavorited={!!isFavorited}
+          favoritesCount={article.favorited.length}
         >
-          <input
-            type="hidden"
-            name="favorited"
-            value={isFavorited ? "1" : ""}
-          />
-          <input type="hidden" name="id" value={article.id} />
-          <input type="hidden" name="referer" value={location.pathname} />
-          <button
-            className={classNames("btn btn-sm pull-xs-right", {
-              "btn-outline-primary": !isFavorited,
-              "btn-primary": isFavorited,
-            })}
-            disabled={isSubmitting}
-          >
-            <i className="ion-heart"></i> {article.favorited.length}
-          </button>
-        </Form>
+          <i className="ion-heart"></i>
+        </FavoriteArticleButton>
       </div>
       <Link to={`/article/${article.id}`} className="preview-link">
         <h1>{article.title}</h1>

@@ -89,7 +89,7 @@ export default function Login() {
               <a href="">Need an account?</a>
             </p>
             <ErrorMessages errors={data?.errors} />
-            <Form method="post" action="/login">
+            <Form method="post">
               <fieldset className="form-group" disabled={!!submission}>
                 <input
                   defaultValue={data?.values.email}

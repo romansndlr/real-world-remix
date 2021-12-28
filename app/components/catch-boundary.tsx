@@ -1,6 +1,6 @@
 import { useCatch } from "remix";
-import Layout from "./Layout";
-import Document from "./Document";
+import Layout from "./layout";
+import Document from "./document";
 
 const CatchBoundary = () => {
   let caught = useCatch();

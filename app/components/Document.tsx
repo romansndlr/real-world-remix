@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Links, LiveReload, Meta, Scripts, ScrollRestoration } from "remix";
-import RouteChangeAnnouncement from "./RouteChangeAnnouncement";
+import RouteChangeAnnouncement from "./route-change-announcement";
 
 const Document: React.FC<{
   children: React.ReactNode;

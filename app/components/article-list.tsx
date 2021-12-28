@@ -1,7 +1,7 @@
 import { useSearchParams, useTransition } from "remix";
 import { Article, Favorites, Tag, User } from "@prisma/client";
 import isEmpty from "lodash/isEmpty";
-import ArticlePreview from "./ArticlePreview";
+import ArticlePreview from "./article-preview";
 
 const ArticleList: React.FC<{
   articles: Array<

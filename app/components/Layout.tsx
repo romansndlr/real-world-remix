@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "remix";
-import Alert from "./Alert";
+import Alert from "./alert";
 
 const Layout: React.FC<{
   alert?: string;

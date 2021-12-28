@@ -55,7 +55,7 @@ const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
             </NavLink>
           </li>
           <li className="nav-item">
-            <NavLink className="nav-link" to={`/@${user?.username}`}>
+            <NavLink className="nav-link" to={`/profile/${user?.username}`}>
               <img
                 style={{
                   width: 24,

@@ -1,6 +1,6 @@
 import * as React from "react";
-import Document from "./Document";
-import Layout from "./Layout";
+import Document from "./document";
+import Layout from "./layout";
 
 const ErrorBoundary: React.FC<{ error: Error }> = ({ error }) => {
   console.error(error);

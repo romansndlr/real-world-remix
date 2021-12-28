@@ -45,5 +45,5 @@ export default function App() {
   );
 }
 
-export { default as CatchBoundary } from "./components/CatchBoundary";
-export { default as ErrorBoundary } from "./components/ErrorBoundary";
+export { default as CatchBoundary } from "./components/catch-boundary";
+export { default as ErrorBoundary } from "./components/error-boundary";
