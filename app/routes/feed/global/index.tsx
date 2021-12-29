@@ -1,10 +1,10 @@
 import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { db, getSession } from "~/utils";
 import { getArticles } from "~/services";
+import { db, getSession } from "~/utils";
 
-interface HomeFeedLoader {
+interface GlobalFeedLoader {
   articles: Array<
     Article & { author: User; tags: Tag[]; favorited: Favorites[] }
   >;
@@ -23,7 +23,6 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const { articles, articlesCount } = await getArticles({
     offset: Number(offset),
-    userId,
   });
 
   if (!userId) {
@@ -35,14 +34,14 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({ user, articles, articlesCount });
 };
 
-export default function HomeFeed() {
-  const { articles, articlesCount, user } = useLoaderData<HomeFeedLoader>();
+export default function GlobalFeed() {
+  const { articles, user, articlesCount } = useLoaderData<GlobalFeedLoader>();
 
   return (
     <ArticleList
       articles={articles}
-      articlesCount={articlesCount}
       authUser={user}
+      articlesCount={articlesCount}
     />
   );
 }

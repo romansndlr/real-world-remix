@@ -1,5 +1,3 @@
-import { Tag } from "@prisma/client";
-import classNames from "classnames";
 import {
   useParams,
   json,
@@ -9,6 +7,7 @@ import {
   useLoaderData,
   Outlet,
 } from "remix";
+import { Tag } from "@prisma/client";
 import { db, getSession } from "~/utils";
 
 interface HomeLoader {
@@ -47,23 +46,19 @@ export default function Home() {
                   <li className="nav-item">
                     <NavLink
                       prefetch="intent"
-                      to="feed"
-                      className={({ isActive }) =>
-                        classNames("nav-link", { active: isActive })
-                      }
+                      to="/feed/my"
+                      className="nav-link"
                     >
-                      Your Feed
+                      My Feed
                     </NavLink>
                   </li>
                 )}
                 <li className="nav-item">
                   <NavLink
                     prefetch="intent"
-                    to="global"
+                    to="/feed/global"
                     end
-                    className={({ isActive }) =>
-                      classNames("nav-link", { active: isActive })
-                    }
+                    className="nav-link"
                   >
                     Global Feed
                   </NavLink>
@@ -72,7 +67,7 @@ export default function Home() {
                   <li className="nav-item">
                     <NavLink
                       prefetch="intent"
-                      to={`/global/${tag}`}
+                      to={`/feed/global/${tag}`}
                       className="nav-link active"
                     >
                       # {tag}
@@ -90,7 +85,7 @@ export default function Home() {
                 {tags.length === 0 && <p>No tags are here... yet.</p>}
                 {tags.map((tag, i) => (
                   <Link
-                    to={`/global/${tag.name}`}
+                    to={`/feed/global/${tag.name}`}
                     className="tag-pill tag-default"
                     key={i}
                   >

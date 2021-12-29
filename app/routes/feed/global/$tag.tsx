@@ -4,7 +4,7 @@ import { ArticleList } from "~/components";
 import { getArticles } from "~/services";
 import { db, getSession } from "~/utils";
 
-interface HomeGlobalLoader {
+interface TagFeedLoader {
   articles: Array<
     Article & { author: User; tags: Tag[]; favorited: Favorites[] }
   >;
@@ -12,7 +12,7 @@ interface HomeGlobalLoader {
   articlesCount: number;
 }
 
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader: LoaderFunction = async ({ request, params }) => {
   const session = await getSession(request.headers.get("Cookie"));
 
   const userId = session.get("userId");
@@ -23,6 +23,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const { articles, articlesCount } = await getArticles({
     offset: Number(offset),
+    tag: params.tag as string,
   });
 
   if (!userId) {
@@ -34,8 +35,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({ user, articles, articlesCount });
 };
 
-export default function HomeGlobal() {
-  const { articles, user, articlesCount } = useLoaderData<HomeGlobalLoader>();
+export default function TagFeedLoader() {
+  const { articles, user, articlesCount } = useLoaderData<TagFeedLoader>();
 
   return (
     <ArticleList

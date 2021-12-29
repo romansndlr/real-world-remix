@@ -1,10 +1,10 @@
 import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { getArticles } from "~/services";
 import { db, getSession } from "~/utils";
+import { getArticles } from "~/services";
 
-interface HomeTagLoader {
+interface MyFeedLoader {
   articles: Array<
     Article & { author: User; tags: Tag[]; favorited: Favorites[] }
   >;
@@ -12,7 +12,7 @@ interface HomeTagLoader {
   articlesCount: number;
 }
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
 
   const userId = session.get("userId");
@@ -23,7 +23,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const { articles, articlesCount } = await getArticles({
     offset: Number(offset),
-    tag: params.tag as string,
+    userId,
   });
 
   if (!userId) {
@@ -35,14 +35,14 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   return json({ user, articles, articlesCount });
 };
 
-export default function HomeTag() {
-  const { articles, user, articlesCount } = useLoaderData<HomeTagLoader>();
+export default function MyFeed() {
+  const { articles, articlesCount, user } = useLoaderData<MyFeedLoader>();
 
   return (
     <ArticleList
       articles={articles}
-      authUser={user}
       articlesCount={articlesCount}
+      authUser={user}
     />
   );
 }

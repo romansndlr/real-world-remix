@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import { NavLink, Outlet, useParams } from "remix";
 
-const ProfileLayout = () => {
+const Profile = () => {
   const { username } = useParams();
 
   return (
@@ -59,4 +59,4 @@ const ProfileLayout = () => {
   );
 };
 
-export default ProfileLayout;
+export default Profile;

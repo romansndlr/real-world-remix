@@ -6,5 +6,5 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const userId = session.get("userId");
 
-  return redirect(userId ? "/feed" : "/global");
+  return redirect(userId ? "/feed/my" : "/feed/global");
 };
