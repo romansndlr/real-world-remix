@@ -34,32 +34,34 @@ const ArticleList: React.FC<{
           <p>Loading...</p>
         </div>
       )}
-      <nav>
-        <ul className="pagination">
-          {Array.from({ length: articlesCount }, (_, i) => (
-            <li
-              className={
-                Number(offset) === i ? "page-item active" : "page-item"
-              }
-              key={i}
-            >
-              <button
-                type="button"
-                className="page-link"
-                onClick={() => {
-                  const updatedParams = new URLSearchParams();
-
-                  updatedParams.set("offset", String(i));
-
-                  setSearchParams(updatedParams);
-                }}
+      {articlesCount > 10 && (
+        <nav>
+          <ul className="pagination">
+            {Array.from({ length: articlesCount }, (_, i) => (
+              <li
+                className={
+                  Number(offset) === i ? "page-item active" : "page-item"
+                }
+                key={i}
               >
-                {i + 1}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+                <button
+                  type="button"
+                  className="page-link"
+                  onClick={() => {
+                    const updatedParams = new URLSearchParams();
+
+                    updatedParams.set("offset", String(i));
+
+                    setSearchParams(updatedParams);
+                  }}
+                >
+                  {i + 1}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </div>
   );
 };

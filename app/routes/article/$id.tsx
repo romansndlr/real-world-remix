@@ -55,19 +55,36 @@ const Article = () => {
           {new Date(article.createdAt).toLocaleDateString()}
         </span>
       </div>
-      <button className="btn btn-sm btn-outline-secondary">
-        <i className="ion-plus-round"></i>
-        &nbsp; Follow Eric Simons <span className="counter">(10)</span>
-      </button>
-      &nbsp;&nbsp;
-      <FavoriteArticleButton
-        style={{ display: "inline-flex" }}
-        articleId={article.id}
-        isFavorited={!!isFavorited}
-        favoritesCount={`(${article.favorited.length})`}
-      >
-        <i className="ion-heart"></i>&nbsp;&nbsp;Favorite Post
-      </FavoriteArticleButton>
+      {article.author.id === authUser.id ? (
+        <span>
+          <a
+            className="btn btn-outline-secondary btn-sm"
+            href="#/editor/New-article-2057"
+          >
+            <i className="ion-edit"></i> Edit Article
+          </a>
+          &nbsp;&nbsp;
+          <button className="btn btn-outline-danger btn-sm">
+            <i className="ion-trash-a"></i> Delete Article
+          </button>
+        </span>
+      ) : (
+        <span>
+          <button className="btn btn-sm btn-outline-secondary">
+            <i className="ion-plus-round"></i>
+            &nbsp; Follow Eric Simons <span className="counter">(10)</span>
+          </button>
+          &nbsp;&nbsp;
+          <FavoriteArticleButton
+            style={{ display: "inline-flex" }}
+            articleId={article.id}
+            isFavorited={!!isFavorited}
+            favoritesCount={`(${article.favorited.length})`}
+          >
+            <i className="ion-heart"></i>&nbsp;&nbsp;Favorite Post
+          </FavoriteArticleButton>
+        </span>
+      )}
     </div>
   );
 

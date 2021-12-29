@@ -23,7 +23,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const { articles, articlesCount } = await getArticles({
     offset: Number(offset),
-    userId,
+    favoritedBy: userId,
   });
 
   if (!userId) {

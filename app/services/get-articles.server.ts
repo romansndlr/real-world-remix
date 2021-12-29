@@ -5,12 +5,14 @@ interface GetArticlesArgs {
   offset?: number;
   tag?: string;
   userId?: number;
+  favoritedBy?: number;
 }
 
 export default async function getArticles({
   offset = 0,
   tag,
   userId,
+  favoritedBy,
 }: GetArticlesArgs): Promise<{ articles: Article[]; articlesCount: number }> {
   const filter = {
     tags: tag
@@ -20,11 +22,16 @@ export default async function getArticles({
           },
         }
       : undefined,
-    favorited: userId
+    favorited: favoritedBy
       ? {
           some: {
-            userId,
+            userId: favoritedBy,
           },
+        }
+      : undefined,
+    author: userId
+      ? {
+          id: userId,
         }
       : undefined,
   };

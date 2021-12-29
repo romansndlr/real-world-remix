@@ -1,7 +1,7 @@
 import { json, LoaderFunction, Outlet, useLoaderData } from "remix";
 import type { LinksFunction } from "remix";
 import { NavLinks, Document, Layout } from "./components";
-import { db, getSession } from "./utils";
+import { commitSession, db, getSession } from "./utils";
 
 export const links: LinksFunction = () => {
   return [
@@ -24,13 +24,21 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const alert = session.get("alert");
 
+  const init = alert
+    ? {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    : undefined;
+
   if (!userId) {
-    return json({ user: null, alert });
+    return json({ user: null, alert }, init);
   }
 
   const user = await db.user.findUnique({ where: { id: userId } });
 
-  return json({ user, alert });
+  return json({ user, alert }, init);
 };
 
 export default function App() {

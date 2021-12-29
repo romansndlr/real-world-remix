@@ -24,13 +24,15 @@ const ArticlePreview: React.FC<{
             {new Date(article.createdAt).toLocaleDateString()}
           </span>
         </div>
-        <FavoriteArticleButton
-          articleId={article.id}
-          isFavorited={!!isFavorited}
-          favoritesCount={article.favorited.length}
-        >
-          <i className="ion-heart"></i>
-        </FavoriteArticleButton>
+        {article.author.id !== authUser?.id && (
+          <FavoriteArticleButton
+            articleId={article.id}
+            isFavorited={!!isFavorited}
+            favoritesCount={article.favorited.length}
+          >
+            <i className="ion-heart"></i>
+          </FavoriteArticleButton>
+        )}
       </div>
       <Link to={`/article/${article.id}`} className="preview-link">
         <h1>{article.title}</h1>
