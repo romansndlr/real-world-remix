@@ -1,8 +1,8 @@
 import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { db, getSession } from "~/utils";
-import { getArticles } from "~/services";
+import { getUserId } from "~/utils";
+import { getArticles, getAuthUser } from "~/services";
 
 interface MyFeedLoader {
   articles: Array<
@@ -13,9 +13,7 @@ interface MyFeedLoader {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   const url = new URL(request.url);
 
@@ -30,7 +28,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     return json({ user: null, articles, articlesCount });
   }
 
-  const user = await db.user.findUnique({ where: { id: userId } });
+  const user = await getAuthUser(request);
 
   return json({ user, articles, articlesCount });
 };

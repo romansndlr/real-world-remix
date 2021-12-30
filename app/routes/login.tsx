@@ -2,81 +2,37 @@ import {
   ActionFunction,
   Form,
   json,
-  redirect,
   useActionData,
   useTransition,
 } from "remix";
-import * as Yup from "yup";
 import { ErrorMessages } from "~/components";
 import { login } from "~/services";
-import { commitSession, getSession, ValidationError } from "~/utils";
+import { createSession } from "~/utils";
 
 interface LoginAction {
-  errors: unknown;
+  errors: Record<string, string[]>;
   values: {
     email: string;
     password: string;
   };
 }
 
-let validationSchema = Yup.object().shape({
-  email: Yup.string().email().required(),
-  password: Yup.string()
-    .required()
-    .min(6)
-    .matches(/[a-zA-Z1-9]/),
-});
-
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession();
+  const { email, password } = Object.fromEntries(await request.formData());
 
-  const form = await request.formData();
+  const result = await login({ email, password });
 
-  const email = form.get("email") as string;
-  const password = form.get("password") as string;
-
-  try {
-    validationSchema.validateSync({
-      email,
-      password,
-    });
-  } catch (error) {
-    if (error instanceof Yup.ValidationError) {
-      return json({
-        errors: error.errors,
-        values: {
-          email,
-          password,
-        },
-      });
-    }
+  if (result?.data) {
+    await createSession(result.data.id);
   }
 
-  try {
-    const user = await login({ email, password });
-
-    session.set("userId", user.id);
-
-    return redirect("/", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return json({
-        errors: error.errors,
-        values: {
-          email,
-          password,
-        },
-      });
-    }
+  if (result?.errors) {
+    return json({ errors: result.errors, values: { email, password } });
   }
 };
 
 export default function Login() {
-  const data = useActionData<LoginAction>();
+  const actionData = useActionData<LoginAction>();
   const { submission } = useTransition();
 
   return (
@@ -88,35 +44,34 @@ export default function Login() {
             <p className="text-xs-center">
               <a href="">Need an account?</a>
             </p>
-            <ErrorMessages errors={data?.errors} />
-            <Form method="post">
-              <fieldset className="form-group" disabled={!!submission}>
-                <input
-                  defaultValue={data?.values.email}
-                  name="email"
-                  className="form-control form-control-lg"
-                  type="email"
-                  placeholder="Email"
-                  required
-                />
+            <ErrorMessages errors={actionData?.errors} />
+            <Form method="post" reloadDocument>
+              <fieldset disabled={!!submission}>
+                <fieldset className="form-group">
+                  <input
+                    defaultValue={actionData?.values.email}
+                    name="email"
+                    className="form-control form-control-lg"
+                    type="email"
+                    placeholder="Email"
+                  />
+                </fieldset>
+                <fieldset className="form-group">
+                  <input
+                    defaultValue={actionData?.values.password}
+                    name="password"
+                    className="form-control form-control-lg"
+                    type="password"
+                    placeholder="Password"
+                  />
+                </fieldset>
+                <button
+                  type="submit"
+                  className="btn btn-lg btn-primary pull-xs-right"
+                >
+                  Sign in
+                </button>
               </fieldset>
-              <fieldset className="form-group" disabled={!!submission}>
-                <input
-                  defaultValue={data?.values.password}
-                  name="password"
-                  className="form-control form-control-lg"
-                  type="password"
-                  placeholder="Password"
-                  required
-                />
-              </fieldset>
-              <button
-                disabled={!!submission}
-                type="submit"
-                className="btn btn-lg btn-primary pull-xs-right"
-              >
-                Sign in
-              </button>
             </Form>
           </div>
         </div>

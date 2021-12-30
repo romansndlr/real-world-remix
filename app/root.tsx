@@ -1,7 +1,7 @@
 import { json, LoaderFunction, Outlet, useLoaderData } from "remix";
 import type { LinksFunction } from "remix";
 import { NavLinks, Document, Layout } from "./components";
-import { commitSession, db, getSession } from "./utils";
+import { getAuthUser } from "./services";
 
 export const links: LinksFunction = () => {
   return [
@@ -18,35 +18,17 @@ export const links: LinksFunction = () => {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
+  const user = await getAuthUser(request);
 
-  const userId = session.get("userId");
-
-  const alert = session.get("alert");
-
-  const init = alert
-    ? {
-        headers: {
-          "Set-Cookie": await commitSession(session),
-        },
-      }
-    : undefined;
-
-  if (!userId) {
-    return json({ user: null, alert }, init);
-  }
-
-  const user = await db.user.findUnique({ where: { id: userId } });
-
-  return json({ user, alert }, init);
+  return json({ user });
 };
 
 export default function App() {
-  const { user, alert } = useLoaderData();
+  const { user } = useLoaderData();
 
   return (
     <Document title="Conduit">
-      <Layout alert={alert} navLinks={<NavLinks user={user} />}>
+      <Layout navLinks={<NavLinks user={user} />}>
         <Outlet />
       </Layout>
     </Document>

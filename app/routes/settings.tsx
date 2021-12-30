@@ -5,40 +5,34 @@ import {
   Form,
   json,
   LoaderFunction,
-  redirect,
   useActionData,
   useLoaderData,
   useTransition,
 } from "remix";
 import * as Yup from "yup";
 import { ErrorMessages } from "~/components";
-import { db, getSession } from "~/utils";
-import { isNil, omitBy } from "lodash";
+import { db, getUserId } from "~/utils";
+import { getAuthUser } from "~/services";
+import { isEmpty } from "lodash";
 
 interface SettingsLoader {
   user: User;
 }
 
-interface SettingsAction {
-  errors: unknown;
-  values: {
-    username: string;
-    email: string;
-    password: string;
-    bio: string;
-    image: string;
-  };
+interface FormValues {
+  username: string;
+  email: string;
+  password?: string;
+  bio: string;
+  image: string;
 }
 
-const defaultValues = {
-  username: "",
-  email: "",
-  password: "",
-  bio: "",
-  image: "",
-};
+interface SettingsAction {
+  errors: unknown;
+  values: FormValues;
+}
 
-let validationSchema = Yup.object().shape({
+const validationSchema = Yup.object().shape({
   username: Yup.string().min(3).max(25).required(),
   email: Yup.string().email().required(),
   bio: Yup.string(),
@@ -49,63 +43,51 @@ let validationSchema = Yup.object().shape({
 });
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  const userId = session.get("userId");
-
-  const user = await db.user.findUnique({ where: { id: userId } });
+  const user = await getAuthUser(request);
 
   return json({ user });
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
+  const userId = await getUserId(request);
 
-  const userId = session.get("userId");
-
-  const form = await request.formData();
-
-  const username = form.get("username") || null;
-  const email = form.get("email") || null;
-  const password = form.get("password") || null;
-  const bio = form.get("bio") || null;
-  const image = form.get("image") || null;
-
-  const user = omitBy(
-    {
-      username,
-      email,
-      password,
-      bio,
-      image,
-    },
-    isNil
+  const { username, email, password, bio, image } = Object.fromEntries(
+    await request.formData()
   );
 
+  const values = { username, email, bio, image };
+
   try {
-    await validationSchema.validateSync(user);
+    const validated = await validationSchema.validateSync(
+      password ? { ...values, password } : values
+    );
+
+    await db.user.update({
+      where: {
+        id: userId,
+      },
+      data: validated,
+    });
+
+    return json({
+      values: validated,
+      errors: {},
+    });
   } catch (error) {
     if (error instanceof Yup.ValidationError) {
       return json({
         errors: error.errors,
-        values: user,
+        values,
       });
     }
+
+    console.error(error);
   }
-
-  await db.user.update({
-    where: {
-      id: userId,
-    },
-    data: user,
-  });
-
-  return redirect(`/settings`);
 };
 
 const Settings: React.FC = () => {
   const { user } = useLoaderData<SettingsLoader>();
-  const data = useActionData<SettingsAction>();
+  const actionData = useActionData<SettingsAction>();
   const { submission } = useTransition();
 
   return (
@@ -114,14 +96,12 @@ const Settings: React.FC = () => {
         <div className="row">
           <div className="col-md-6 offset-md-3 col-xs-12">
             <h1 className="text-xs-center">Your Settings</h1>
-            <ErrorMessages errors={data?.errors} />
+            <ErrorMessages errors={actionData?.errors} />
             <Form action="/settings" method="put">
               <fieldset>
                 <fieldset className="form-group" disabled={!!submission}>
                   <input
-                    defaultValue={
-                      data?.values.image || user.image || defaultValues.image
-                    }
+                    defaultValue={actionData?.values.image || user.image || ""}
                     name="image"
                     className="form-control"
                     type="text"
@@ -131,9 +111,7 @@ const Settings: React.FC = () => {
                 <fieldset className="form-group" disabled={!!submission}>
                   <input
                     defaultValue={
-                      data?.values.username ||
-                      user.username ||
-                      defaultValues.username
+                      actionData?.values.username || user.username || ""
                     }
                     name="username"
                     className="form-control form-control-lg"
@@ -144,9 +122,7 @@ const Settings: React.FC = () => {
                 </fieldset>
                 <fieldset className="form-group" disabled={!!submission}>
                   <textarea
-                    defaultValue={
-                      data?.values.bio || user.bio || defaultValues.bio
-                    }
+                    defaultValue={actionData?.values.bio || user.bio || ""}
                     name="bio"
                     className="form-control form-control-lg"
                     rows={8}
@@ -155,9 +131,7 @@ const Settings: React.FC = () => {
                 </fieldset>
                 <fieldset className="form-group" disabled={!!submission}>
                   <input
-                    defaultValue={
-                      data?.values.email || user.email || defaultValues.email
-                    }
+                    defaultValue={actionData?.values.email || user.email || ""}
                     name="email"
                     className="form-control form-control-lg"
                     type="email"
@@ -183,7 +157,7 @@ const Settings: React.FC = () => {
               </fieldset>
             </Form>
             <hr />
-            <Form method="post" action="/logout">
+            <Form method="post" action="/logout" reloadDocument>
               <button
                 type="submit"
                 className="btn btn-outline-danger"

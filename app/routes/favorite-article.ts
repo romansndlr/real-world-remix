@@ -1,22 +1,20 @@
 import { ActionFunction, redirect } from "remix";
-import { db, getSession } from "~/utils";
+import { db, getUserId } from "~/utils";
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   if (!userId) {
     return redirect("/login");
   }
 
-  const form = await request.formData();
+  const { favorited, articleId, referer } = Object.fromEntries(
+    await request.formData()
+  );
 
-  const favorited = form.get("favorited");
-
-  const articleId = form.get("id");
-
-  const referer = form.get("referer") as string;
+  if (!referer) {
+    return new Response("Referer must be set", { status: 400 });
+  }
 
   await db.article.update({
     where: {
@@ -37,5 +35,5 @@ export const action: ActionFunction = async ({ request }) => {
     },
   });
 
-  return redirect(referer);
+  return redirect(String(referer));
 };

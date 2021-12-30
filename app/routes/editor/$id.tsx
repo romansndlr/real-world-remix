@@ -7,7 +7,7 @@ import {
   useLoaderData,
 } from "remix";
 import * as Yup from "yup";
-import { db, getSession } from "~/utils";
+import { db, getUserId } from "~/utils";
 import { ArticleForm } from "~/components";
 import { omit } from "lodash";
 
@@ -31,18 +31,13 @@ const validationSchema = Yup.object().shape({
 });
 
 export const action: ActionFunction = async ({ request, params }) => {
-  const session = await getSession(request.headers.get("Cookie"));
+  const userId = await getUserId(request);
 
   const articleId = params.id;
 
-  const userId = session.get("userId");
-
-  const formData = await request.formData();
-
-  const title = formData.get("title");
-  const description = formData.get("description");
-  const body = formData.get("body");
-  const tags = formData.get("tags");
+  const { title, description, body, tags } = Object.fromEntries(
+    await request.formData()
+  );
 
   const values = {
     title,

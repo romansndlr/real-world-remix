@@ -1,20 +1,9 @@
+import * as React from "react";
 import { User } from "@prisma/client";
 import classNames from "classnames";
-import { compact, map } from "lodash";
-import * as React from "react";
-import { NavLink, useMatches } from "remix";
+import { NavLink } from "remix";
 
 const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
-  const matches = useMatches();
-
-  const isHome = React.useMemo(
-    () =>
-      compact(map(matches, "pathname")).some(
-        (path) => path.startsWith("/feed") || path.startsWith("/global")
-      ),
-    [matches]
-  );
-
   return (
     <ul className="nav navbar-nav pull-xs-right">
       <li className="nav-item">

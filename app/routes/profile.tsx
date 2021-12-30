@@ -1,38 +1,28 @@
 import { User } from "@prisma/client";
-import { isEmpty } from "lodash";
 import {
   json,
   LoaderFunction,
   NavLink,
   Outlet,
-  redirect,
   useLoaderData,
   useParams,
 } from "remix";
-import { commitSession, db, getSession } from "~/utils";
+import { db } from "~/utils";
 
 interface ProfileLoader {
   profile: User;
 }
 
 export const loader: LoaderFunction = async ({ params, request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
+  if (!params.username) {
+    return json({ profile: null });
+  }
 
   const profile = await db.user.findUnique({
     where: {
       username: params.username,
     },
   });
-
-  if (isEmpty(profile) || !profile) {
-    session.flash("alert", `Can't find the profile of ${params.username}`);
-
-    return redirect("/", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
-  }
 
   return json({ profile });
 };

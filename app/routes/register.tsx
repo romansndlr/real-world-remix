@@ -1,71 +1,44 @@
-import axios, { AxiosError } from "axios";
-import React from "react";
 import {
-  LoaderFunction,
   ActionFunction,
-  useLoaderData,
   Form,
   useTransition,
   json,
-  redirect,
+  useActionData,
 } from "remix";
 import { ErrorMessages } from "~/components";
-import { getSession } from "~/utils";
+import { register } from "~/services";
+import { createSession } from "~/utils";
 
-export const loader: LoaderFunction = async () => {
-  const session = await getSession();
-
-  const errors = session.get("register-form-errors");
-
-  return await json({ errors });
-};
+interface RegisterAction {
+  errors?: Record<string, string[]>;
+  values?: {
+    username: string;
+    email: string;
+    password: string;
+  };
+}
 
 export const action: ActionFunction = async ({ request }) => {
-  const session = await getSession();
+  const { username, email, password } = Object.fromEntries(
+    await request.formData()
+  );
 
-  const form = await request.formData();
+  const values = { username, email, password };
 
-  const username = form.get("username");
-  const email = form.get("email");
-  const password = form.get("password");
+  const result = await register(values);
 
-  try {
-    const { data } = await axios.post("users", {
-      user: {
-        username,
-        password,
-        email,
-      },
-    });
-
-    const token = data.user.token;
-
-    session.set("token", token);
-
-    axios.defaults.headers.common["Authorization"] = `Token ${token}`;
-  } catch (error: unknown | AxiosError) {
-    if (!axios.isAxiosError(error)) return;
-
-    const errors = error?.response?.data.errors;
-
-    if (errors) {
-      session.flash("register-form-errors", errors);
-    }
-
-    return redirect("/register");
+  if (result?.data) {
+    createSession(result.data.id);
   }
 
-  return redirect("/");
+  if (result?.errors) {
+    return json({ errors: result.errors, values });
+  }
 };
 
 export default function Register() {
-  const { errors } = useLoaderData();
-  const { state } = useTransition();
-
-  const isDisabled = React.useMemo(
-    () => ["submitting", "loading"].includes(state),
-    [state]
-  );
+  const actionData = useActionData<RegisterAction>();
+  const { submission } = useTransition();
 
   return (
     <div className="auth-page">
@@ -76,38 +49,40 @@ export default function Register() {
             <p className="text-xs-center">
               <a href="">Have an account?</a>
             </p>
-            <ErrorMessages errors={errors} />
-            <Form method="post" action="/register">
-              <fieldset className="form-group" disabled={isDisabled}>
-                <input
-                  name="username"
-                  className="form-control form-control-lg"
-                  type="text"
-                  placeholder="Your Name"
-                />
+            <ErrorMessages errors={actionData?.errors} />
+            <Form method="post" reloadDocument>
+              <fieldset disabled={!!submission}>
+                <fieldset className="form-group">
+                  <input
+                    defaultValue={actionData?.values?.username}
+                    name="username"
+                    className="form-control form-control-lg"
+                    type="text"
+                    placeholder="Your Name"
+                  />
+                </fieldset>
+                <fieldset className="form-group">
+                  <input
+                    defaultValue={actionData?.values?.email}
+                    name="email"
+                    className="form-control form-control-lg"
+                    type="text"
+                    placeholder="Email"
+                  />
+                </fieldset>
+                <fieldset className="form-group">
+                  <input
+                    defaultValue={actionData?.values?.password}
+                    name="password"
+                    className="form-control form-control-lg"
+                    type="password"
+                    placeholder="Password"
+                  />
+                </fieldset>
+                <button className="btn btn-lg btn-primary pull-xs-right">
+                  Sign up
+                </button>
               </fieldset>
-              <fieldset className="form-group" disabled={isDisabled}>
-                <input
-                  name="email"
-                  className="form-control form-control-lg"
-                  type="text"
-                  placeholder="Email"
-                />
-              </fieldset>
-              <fieldset className="form-group" disabled={isDisabled}>
-                <input
-                  name="password"
-                  className="form-control form-control-lg"
-                  type="password"
-                  placeholder="Password"
-                />
-              </fieldset>
-              <button
-                className="btn btn-lg btn-primary pull-xs-right"
-                disabled={isDisabled}
-              >
-                Sign up
-              </button>
             </Form>
           </div>
         </div>

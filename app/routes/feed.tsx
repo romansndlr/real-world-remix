@@ -8,7 +8,7 @@ import {
   Outlet,
 } from "remix";
 import { Tag } from "@prisma/client";
-import { db, getSession } from "~/utils";
+import { db, getUserId } from "~/utils";
 
 interface HomeLoader {
   tags: Tag[];
@@ -16,9 +16,7 @@ interface HomeLoader {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   const tags = await db.tag.findMany();
 

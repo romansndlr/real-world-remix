@@ -1,13 +1,15 @@
-import { db, getSession } from "~/utils";
+import { db, getUserId, logout } from "~/utils";
 
-export default async function(request: Request) {
-  const session = await getSession(request.headers.get("Cookie"));
+export default async function (request: Request) {
+  const userId = await getUserId(request);
 
-  const userId = session.get("userId");
+  if (!userId) {
+    return null;
+  }
 
-  return  await db.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
+  try {
+    return await db.user.findUnique({ where: { id: userId } });
+  } catch {
+    throw logout(request);
+  }
 }

@@ -1,10 +1,8 @@
 import { LoaderFunction, redirect } from "remix";
-import { getSession } from "~/utils";
+import { getUserId } from "~/utils";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   return redirect(userId ? "/feed/my" : "/feed/global");
 };
