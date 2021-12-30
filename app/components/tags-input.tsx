@@ -2,8 +2,21 @@ import * as React from "react";
 
 const TagsInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
   name,
+  defaultValue,
 }) => {
-  const [tags, setTags] = React.useState<string[]>([]);
+  const getDefaultValue = () => {
+    if (Array.isArray(defaultValue)) {
+      return defaultValue;
+    }
+
+    if (typeof defaultValue === "string") {
+      return defaultValue.split(",");
+    }
+
+    return [];
+  };
+
+  const [tags, setTags] = React.useState<string[]>(getDefaultValue());
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

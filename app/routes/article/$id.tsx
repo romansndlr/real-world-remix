@@ -1,7 +1,8 @@
 import { Article, Favorites, Tag, User } from "@prisma/client";
-import { json, Link, LoaderFunction, useLoaderData } from "remix";
+import { json, Link, LoaderFunction, redirect, useLoaderData } from "remix";
 import { FavoriteArticleButton } from "~/components";
-import { db, getSession } from "~/utils";
+import { getAuthUser } from "~/services";
+import { db } from "~/utils";
 
 interface ArticleLoader {
   article: Article & { author: User; favorited: Favorites[]; tags: Tag[] };
@@ -9,13 +10,15 @@ interface ArticleLoader {
 }
 
 export const loader: LoaderFunction = async ({ params, request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
   const { id } = params;
 
-  const userId = session.get("userId");
+  if (!id) {
+    return redirect("/");
+  }
 
-  const article = await db.article.findUnique({
+  const authUser = await getAuthUser(request);
+
+  const article = await await db.article.findUnique({
     where: {
       id: Number(id),
     },
@@ -23,12 +26,6 @@ export const loader: LoaderFunction = async ({ params, request }) => {
       author: true,
       favorited: true,
       tags: true,
-    },
-  });
-
-  const authUser = await db.user.findUnique({
-    where: {
-      id: userId,
     },
   });
 
@@ -57,12 +54,12 @@ const Article = () => {
       </div>
       {article.author.id === authUser.id ? (
         <span>
-          <a
+          <Link
             className="btn btn-outline-secondary btn-sm"
-            href="#/editor/New-article-2057"
+            to={`/editor/${article.id}`}
           >
             <i className="ion-edit"></i> Edit Article
-          </a>
+          </Link>
           &nbsp;&nbsp;
           <button className="btn btn-outline-danger btn-sm">
             <i className="ion-trash-a"></i> Delete Article

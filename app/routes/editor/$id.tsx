@@ -1,7 +1,15 @@
-import { useActionData, redirect, json, ActionFunction } from "remix";
+import {
+  useActionData,
+  redirect,
+  json,
+  ActionFunction,
+  LoaderFunction,
+  useLoaderData,
+} from "remix";
 import * as Yup from "yup";
 import { db, getSession } from "~/utils";
 import { ArticleForm } from "~/components";
+import { omit } from "lodash";
 
 interface ActionData {
   errors?: Record<string, string[]>;
@@ -19,10 +27,13 @@ const validationSchema = Yup.object().shape({
   body: Yup.string().required(),
   tags: Yup.string(),
   userId: Yup.number().required(),
+  articleId: Yup.number().required(),
 });
 
-export const action: ActionFunction = async ({ request }) => {
+export const action: ActionFunction = async ({ request, params }) => {
   const session = await getSession(request.headers.get("Cookie"));
+
+  const articleId = params.id;
 
   const userId = session.get("userId");
 
@@ -45,6 +56,7 @@ export const action: ActionFunction = async ({ request }) => {
       {
         ...values,
         userId,
+        articleId,
       },
       {
         abortEarly: false,
@@ -53,7 +65,23 @@ export const action: ActionFunction = async ({ request }) => {
 
     const tagList = validated.tags ? validated.tags.split(",") : [];
 
-    const article = await db.article.create({
+    const prevArticle = await db.article.findUnique({
+      where: {
+        id: validated.articleId,
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    const prevTagList = prevArticle?.tags.map(({ name }) => name) || [];
+
+    const tagsToRemove = prevTagList.filter((tag) => !tagList.includes(tag));
+
+    const article = await db.article.update({
+      where: {
+        id: validated.articleId,
+      },
       data: {
         title: validated.title,
         description: validated.description,
@@ -72,6 +100,7 @@ export const action: ActionFunction = async ({ request }) => {
               name: tag,
             },
           })),
+          disconnect: tagsToRemove.map((tag) => ({ name: tag })),
         },
       },
     });
@@ -86,8 +115,29 @@ export const action: ActionFunction = async ({ request }) => {
   }
 };
 
+export const loader: LoaderFunction = async ({ params }) => {
+  const articleId = params.id;
+
+  const article = await db.article.findUnique({
+    where: {
+      id: Number(articleId),
+    },
+    include: {
+      tags: true,
+    },
+  });
+
+  return json({
+    article: {
+      ...omit(article, ["tags"]),
+      tags: article?.tags.map((tag) => tag.name),
+    },
+  });
+};
+
 const Editor = () => {
   const actionData = useActionData<ActionData>();
+  const { article } = useLoaderData();
 
   return (
     <div className="editor-page">
@@ -96,7 +146,7 @@ const Editor = () => {
           <div className="col-md-10 offset-md-1 col-xs-12">
             <ArticleForm
               errors={actionData?.errors}
-              defaultValues={actionData?.values}
+              defaultValues={actionData?.values || article}
             />
           </div>
         </div>

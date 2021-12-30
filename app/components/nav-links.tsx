@@ -25,7 +25,7 @@ const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
       {user && (
         <>
           <li className="nav-item">
-            <NavLink prefetch="intent" className="nav-link" to="editor">
+            <NavLink prefetch="intent" className="nav-link" to="editor" end>
               <i className="ion-compose"></i>&nbsp;New Article
             </NavLink>
           </li>
