@@ -13,7 +13,6 @@ import * as Yup from "yup";
 import { ErrorMessages } from "~/components";
 import { db, getUserId } from "~/utils";
 import { getAuthUser } from "~/services";
-import { isEmpty } from "lodash";
 
 interface SettingsLoader {
   user: User;
