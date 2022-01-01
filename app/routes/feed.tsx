@@ -55,7 +55,6 @@ export default function Home() {
                   <NavLink
                     prefetch="intent"
                     to="/feed/global"
-                    end
                     className="nav-link"
                   >
                     Global Feed
@@ -65,7 +64,7 @@ export default function Home() {
                   <li className="nav-item">
                     <NavLink
                       prefetch="intent"
-                      to={`/feed/global/${tag}`}
+                      to={`/feed/tag/${tag}`}
                       className="nav-link active"
                     >
                       # {tag}
@@ -83,7 +82,7 @@ export default function Home() {
                 {tags.length === 0 && <p>No tags are here... yet.</p>}
                 {tags.map((tag, i) => (
                   <Link
-                    to={`/feed/global/${tag.name}`}
+                    to={`/feed/tag/${tag.name}`}
                     className="tag-pill tag-default"
                     key={i}
                   >

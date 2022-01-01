@@ -41,7 +41,6 @@ export const loader: LoaderFunction = async ({ params, request }) => {
 
 const Article = () => {
   const { article, authUser } = useLoaderData<ArticleLoader>();
-  console.log("🚀 ~ file: $id.tsx ~ line 37 ~ Article ~ article", article);
 
   const isFavorited = article.favorited.find(
     ({ userId }) => userId === authUser?.id
