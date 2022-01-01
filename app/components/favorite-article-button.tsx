@@ -24,7 +24,7 @@ const FavoriteArticleButton: React.FC<
   return (
     <Form method="post" action={ACTION} {...props}>
       <input type="hidden" name="favorited" value={isFavorited ? "1" : ""} />
-      <input type="hidden" name="id" value={articleId} />
+      <input type="hidden" name="articleId" value={articleId} />
       <input type="hidden" name="referer" value={location.pathname} />
       <button
         className={classNames("btn btn-sm pull-xs-right", {

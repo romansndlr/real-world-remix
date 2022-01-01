@@ -40,16 +40,14 @@ model Article {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
   body      String
-  authorId  String
   articleId Int?
-  commentId String?
   userId    Int
-  author    User     @relation(fields: [userId], references: [id])
-  Article   Article? @relation(fields: [articleId], references: [id])
+  author    User      @relation(fields: [userId], references: [id])
+  article   Article?  @relation(fields: [articleId], references: [id])
 }
 
 model Favorites {

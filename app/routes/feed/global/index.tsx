@@ -2,7 +2,7 @@ import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
 import { getArticles } from "~/services";
-import { db, getSession } from "~/utils";
+import { db, getUserId } from "~/utils";
 
 interface GlobalFeedLoader {
   articles: Array<
@@ -13,9 +13,7 @@ interface GlobalFeedLoader {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get("Cookie"));
-
-  const userId = session.get("userId");
+  const userId = await getUserId(request);
 
   const url = new URL(request.url);
 

@@ -1,6 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
+import { sample } from "lodash";
 import sampleSize from "lodash/sampleSize";
-import { ArticleFactory, TagFactory, UserFactory } from "../factories";
+import {
+  ArticleFactory,
+  CommentFactory,
+  TagFactory,
+  UserFactory,
+} from "../factories";
 
 const db = new PrismaClient();
 
@@ -21,30 +27,45 @@ async function seed() {
 
   for (const user of allUsers) {
     for (const article of ArticleFactory.buildList(3)) {
-      await db.article.create({
-        data: {
-          ...article,
-          author: {
-            connect: {
-              id: user.id,
+      const comments = CommentFactory.buildList(3);
+      const commentAuthor = sample(allUsers) as User;
+
+      try {
+        await db.article.create({
+          data: {
+            ...article,
+            author: {
+              connect: {
+                id: user.id,
+              },
+            },
+            tags: {
+              connect: sampleSize(allTags, 3).map((tag) => ({
+                id: tag.id,
+              })),
+            },
+            comments: {
+              createMany: {
+                data: comments.map(({ body }) => ({
+                  body,
+                  userId: commentAuthor.id,
+                })),
+              },
+            },
+            favorited: {
+              create: sampleSize(allUsers, 3).map((user) => ({
+                user: {
+                  connect: {
+                    id: user.id,
+                  },
+                },
+              })),
             },
           },
-          tags: {
-            connect: sampleSize(allTags, 3).map((tag) => ({
-              id: tag.id,
-            })),
-          },
-          favorited: {
-            create: sampleSize(allUsers, 3).map((user) => ({
-              user: {
-                connect: {
-                  id: user.id,
-                },
-              },
-            })),
-          },
-        },
-      });
+        });
+      } catch (error) {
+        console.error("🚀 ~ file: seed.ts ~ line 62 ~ seed ~ error", error);
+      }
     }
   }
 }
