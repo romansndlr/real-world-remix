@@ -10,3 +10,4 @@ export { default as ErrorBoundary } from "./error-boundary";
 export { default as FavoriteArticleButton } from "./favorite-article-button";
 export { default as TagsInput } from "./tags-input";
 export { default as ArticleForm } from "./article-form";
+export { default as CommentForm } from "./comment-form";
