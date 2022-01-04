@@ -1,13 +1,10 @@
 import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { getArticles } from "~/services";
 import { db, getUserId } from "~/utils";
 
 interface TagFeedLoader {
-  articles: Array<
-    Article & { author: User; tags: Tag[]; favorited: Favorites[] }
-  >;
+  articles: Array<Article & { author: User; tags: Tag[]; favorited: Favorites[] }>;
   user: User;
   articlesCount: number;
 }
@@ -15,13 +12,42 @@ interface TagFeedLoader {
 export const loader: LoaderFunction = async ({ request, params }) => {
   const userId = await getUserId(request);
 
+  const { tag } = params;
+
   const url = new URL(request.url);
 
   const offset = url.searchParams.get("offset");
 
-  const { articles, articlesCount } = await getArticles({
-    offset: Number(offset),
-    tag: params.tag as string,
+  const articles = await db.article.findMany({
+    skip: Number(offset),
+    take: 10,
+    orderBy: [
+      {
+        createdAt: "desc",
+      },
+    ],
+    where: {
+      tags: {
+        some: {
+          name: tag,
+        },
+      },
+    },
+    include: {
+      author: true,
+      tags: true,
+      favorited: true,
+    },
+  });
+
+  const articlesCount = await db.article.count({
+    where: {
+      tags: {
+        some: {
+          name: tag,
+        },
+      },
+    },
   });
 
   if (!userId) {
@@ -36,11 +62,5 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function TagFeedLoader() {
   const { articles, user, articlesCount } = useLoaderData<TagFeedLoader>();
 
-  return (
-    <ArticleList
-      articles={articles}
-      authUser={user}
-      articlesCount={articlesCount}
-    />
-  );
+  return <ArticleList articles={articles} authUser={user} articlesCount={articlesCount} />;
 }

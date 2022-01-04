@@ -4,11 +4,18 @@ import { Form, useLocation, useTransition } from "remix";
 
 interface FollowAuthorButtonProps {
   authorId: number;
-  isFollowing: boolean;
-  followersCount: number;
+  isFollowing?: boolean;
+  followersCount?: number;
+  className?: string;
 }
 
-const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({ isFollowing, authorId, followersCount, children }) => {
+const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({
+  isFollowing,
+  authorId,
+  followersCount,
+  children,
+  className,
+}) => {
   const { submission } = useTransition();
   const location = useLocation();
 
@@ -20,10 +27,14 @@ const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({ isFollowing, authorId
       <button
         disabled={!!submission}
         type="submit"
-        className={classNames("btn btn-sm", {
-          "btn-outline-secondary": !isFollowing,
-          "btn-secondary": isFollowing,
-        })}
+        className={classNames(
+          "btn btn-sm",
+          {
+            "btn-outline-secondary": !isFollowing,
+            "btn-secondary": isFollowing,
+          },
+          className
+        )}
       >
         <i
           className={classNames({
@@ -31,7 +42,8 @@ const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({ isFollowing, authorId
             "ion-minus-round": isFollowing,
           })}
         ></i>
-        &nbsp; {isFollowing ? "Unfollow" : "Follow"} {children} <span className="counter">({followersCount})</span>
+        &nbsp; {isFollowing ? "Unfollow" : "Follow"} {children}{" "}
+        {followersCount && <span className="counter">({followersCount})</span>}
       </button>
     </Form>
   );

@@ -1,13 +1,11 @@
 import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { getUserId } from "~/utils";
-import { getArticles, getAuthUser } from "~/services";
+import { db, getUserId } from "~/utils";
+import { getAuthUser } from "~/services";
 
 interface MyFeedLoader {
-  articles: Array<
-    Article & { author: User; tags: Tag[]; favorited: Favorites[] }
-  >;
+  articles: Array<Article & { author: User; tags: Tag[]; favorited: Favorites[] }>;
   user: User;
   articlesCount: number;
 }
@@ -19,14 +17,41 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const offset = url.searchParams.get("offset");
 
-  const { articles, articlesCount } = await getArticles({
-    offset: Number(offset),
-    favoritedBy: userId,
+  const articles = await db.article.findMany({
+    skip: Number(offset),
+    take: 10,
+    orderBy: [
+      {
+        createdAt: "desc",
+      },
+    ],
+    where: {
+      author: {
+        followers: {
+          some: {
+            followerId: userId,
+          },
+        },
+      },
+    },
+    include: {
+      author: true,
+      tags: true,
+      favorited: true,
+    },
   });
 
-  if (!userId) {
-    return json({ user: null, articles, articlesCount });
-  }
+  const articlesCount = await db.article.count({
+    where: {
+      author: {
+        followers: {
+          some: {
+            followerId: userId,
+          },
+        },
+      },
+    },
+  });
 
   const user = await getAuthUser(request);
 
@@ -36,11 +61,5 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function MyFeed() {
   const { articles, articlesCount, user } = useLoaderData<MyFeedLoader>();
 
-  return (
-    <ArticleList
-      articles={articles}
-      articlesCount={articlesCount}
-      authUser={user}
-    />
-  );
+  return <ArticleList articles={articles} articlesCount={articlesCount} authUser={user} />;
 }

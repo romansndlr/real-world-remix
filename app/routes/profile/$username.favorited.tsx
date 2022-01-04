@@ -1,7 +1,6 @@
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { getArticles } from "~/services";
-import { db } from "~/utils";
+import { db, getUserId } from "~/utils";
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const username = params.username;
@@ -10,15 +9,40 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const offset = url.searchParams.get("offset");
 
+  const userId = await getUserId(request);
+
   const user = await db.user.findUnique({ where: { username } });
 
-  if (!user) {
-    return json({ user: null, articles: [], articlesCount: 0 });
-  }
+  const articles = await db.article.findMany({
+    skip: Number(offset),
+    take: 10,
+    orderBy: [
+      {
+        createdAt: "desc",
+      },
+    ],
+    where: {
+      favorited: {
+        some: {
+          userId,
+        },
+      },
+    },
+    include: {
+      author: true,
+      tags: true,
+      favorited: true,
+    },
+  });
 
-  const { articles, articlesCount } = await getArticles({
-    offset: Number(offset),
-    favoritedBy: user.id,
+  const articlesCount = await db.article.count({
+    where: {
+      favorited: {
+        some: {
+          userId,
+        },
+      },
+    },
   });
 
   return json({ user, articles, articlesCount });
@@ -27,13 +51,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 const ProfileFavorited = () => {
   const { articles, articlesCount, user } = useLoaderData();
 
-  return (
-    <ArticleList
-      articles={articles}
-      articlesCount={articlesCount}
-      authUser={user}
-    />
-  );
+  return <ArticleList articles={articles} articlesCount={articlesCount} authUser={user} />;
 };
 
 export default ProfileFavorited;

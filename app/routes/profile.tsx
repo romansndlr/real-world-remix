@@ -1,16 +1,12 @@
-import { User } from "@prisma/client";
-import {
-  json,
-  LoaderFunction,
-  NavLink,
-  Outlet,
-  useLoaderData,
-  useParams,
-} from "remix";
+import { Follows, User } from "@prisma/client";
+import { json, Link, LoaderFunction, NavLink, Outlet, useLoaderData, useParams } from "remix";
+import { FollowAuthorButton } from "~/components";
+import { getAuthUser } from "~/services";
 import { db } from "~/utils";
 
 interface ProfileLoader {
-  profile: User;
+  profile: User & { followers: Follows[] };
+  authUser: User;
 }
 
 export const loader: LoaderFunction = async ({ params, request }) => {
@@ -18,18 +14,25 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     return json({ profile: null });
   }
 
+  const authUser = await getAuthUser(request);
+
   const profile = await db.user.findUnique({
     where: {
       username: params.username,
     },
+    include: {
+      followers: true,
+    },
   });
 
-  return json({ profile });
+  return json({ profile, authUser });
 };
 
 const Profile = () => {
   const { username } = useParams();
-  const { profile } = useLoaderData<ProfileLoader>();
+  const { profile, authUser } = useLoaderData<ProfileLoader>();
+
+  const isFollowing = profile.followers.find(({ followerId }) => followerId === authUser?.id);
 
   return (
     <div className="profile-page">
@@ -40,10 +43,15 @@ const Profile = () => {
               <img src={profile.image || ""} className="user-img" />
               <h4>{profile.username}</h4>
               <p>{profile.bio}</p>
-              <button className="btn btn-sm btn-outline-secondary action-btn">
-                <i className="ion-plus-round"></i>
-                &nbsp; Follow Eric Simons
-              </button>
+              {authUser.id === profile.id ? (
+                <Link className="btn btn-sm btn-outline-secondary action-btn" to="/settings">
+                  <i className="ion-gear-a"></i> Edit Profile Settings
+                </Link>
+              ) : (
+                <FollowAuthorButton isFollowing={!!isFollowing} className="action-btn" authorId={profile.id}>
+                  {profile.username}
+                </FollowAuthorButton>
+              )}
             </div>
           </div>
         </div>
@@ -59,10 +67,7 @@ const Profile = () => {
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                  <NavLink
-                    to={`/profile/${username}/favorited`}
-                    className="nav-link"
-                  >
+                  <NavLink to={`/profile/${username}/favorited`} className="nav-link">
                     Favorited Articles
                   </NavLink>
                 </li>
