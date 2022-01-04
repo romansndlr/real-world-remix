@@ -1,5 +1,5 @@
 import { Article, Favorites, Follows, Tag, User } from "@prisma/client";
-import { json, Link, LoaderFunction, Outlet, redirect, useFetcher, useLoaderData } from "remix";
+import { Form, json, Link, LoaderFunction, Outlet, redirect, useFetcher, useLoaderData } from "remix";
 import { FavoriteArticleButton, FollowAuthorButton } from "~/components";
 import { getAuthUser } from "~/services";
 import { db } from "~/utils";
@@ -58,9 +58,11 @@ const Article = () => {
             <i className="ion-edit"></i> Edit Article
           </Link>
           &nbsp;&nbsp;
-          <button className="btn btn-outline-danger btn-sm">
-            <i className="ion-trash-a"></i> Delete Article
-          </button>
+          <Form style={{ display: "inline-flex" }} method="post" action={`/article/${article.id}/delete`}>
+            <button type="submit" className="btn btn-outline-danger btn-sm">
+              <i className="ion-trash-a"></i> Delete Article
+            </button>
+          </Form>
         </span>
       ) : (
         <span style={{ display: "inline-flex" }}>

@@ -37,7 +37,7 @@ model Article {
   userId      Int
   comments    Comment[]
   tags        Tag[]
-  author      User        @relation(fields: [userId], references: [id])
+  author      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   favorited   Favorites[]
 }
 
@@ -48,15 +48,15 @@ model Comment {
   body      String
   articleId Int?
   userId    Int
-  author    User      @relation(fields: [userId], references: [id])
-  article   Article?  @relation(fields: [articleId], references: [id])
+  author    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article?  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 }
 
 model Favorites {
   userId    Int
   articleId Int
-  user      User    @relation(fields: [userId], references: [id])
-  article   Article @relation(fields: [articleId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([userId, articleId])
 }
@@ -64,8 +64,8 @@ model Favorites {
 model Follows {
   followerId Int
   authorId   Int
-  follower   User @relation("Following", fields: [followerId], references: [id])
-  author     User @relation("Followers", fields: [authorId], references: [id])
+  follower   User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  author     User @relation("Followers", fields: [authorId], references: [id], onDelete: Cascade)
 
   @@id([authorId, followerId])
 }

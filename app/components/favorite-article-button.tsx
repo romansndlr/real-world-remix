@@ -11,7 +11,7 @@ const FavoriteArticleButton: React.FC<{
   const location = useLocation();
 
   return (
-    <Form method="post" action="/favorite-article">
+    <Form method="post" action={`/article/${articleId}/favorite`}>
       <fieldset disabled={!!submission}>
         <input type="hidden" name="favorited" value={isFavorited ? "1" : ""} />
         <input type="hidden" name="articleId" value={articleId} />

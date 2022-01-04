@@ -20,7 +20,7 @@ const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({
   const location = useLocation();
 
   return (
-    <Form method="post" action="/follow-author">
+    <Form method="post" action={`/profile/${authorId}/follow`}>
       <input type="hidden" name="authorId" value={authorId} />
       <input type="hidden" name="following" value={isFollowing ? "1" : ""} />
       <input type="hidden" name="redirectTo" value={location.pathname} />
