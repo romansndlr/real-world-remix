@@ -1,6 +1,6 @@
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
-import { db, getUserId } from "~/utils";
+import { db } from "~/utils";
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const username = params.username;
@@ -8,8 +8,6 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   const url = new URL(request.url);
 
   const offset = url.searchParams.get("offset");
-
-  const userId = await getUserId(request);
 
   const user = await db.user.findUnique({ where: { username } });
 
@@ -24,7 +22,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     where: {
       favorited: {
         some: {
-          userId,
+          userId: user?.id,
         },
       },
     },
@@ -39,7 +37,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     where: {
       favorited: {
         some: {
-          userId,
+          userId: user?.id,
         },
       },
     },

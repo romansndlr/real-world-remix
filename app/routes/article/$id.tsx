@@ -52,7 +52,7 @@ const Article = () => {
         <Link to={`/profile/${article.author.username}`}>{article.author.username}</Link>
         <span className="date">{new Date(article.createdAt).toLocaleDateString()}</span>
       </div>
-      {article.author.id === authUser.id ? (
+      {article.author.id === authUser?.id ? (
         <span>
           <Link className="btn btn-outline-secondary btn-sm" to={`/editor/${article.id}`}>
             <i className="ion-edit"></i> Edit Article

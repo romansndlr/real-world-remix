@@ -6,7 +6,7 @@ import { db } from "~/utils";
 
 interface ProfileLoader {
   profile: User & { followers: Follows[] };
-  authUser: User;
+  authUser: User | null;
 }
 
 export const loader: LoaderFunction = async ({ params, request }) => {
@@ -43,7 +43,7 @@ const Profile = () => {
               <img src={profile.image || ""} className="user-img" />
               <h4>{profile.username}</h4>
               <p>{profile.bio}</p>
-              {authUser.id === profile.id ? (
+              {authUser?.id === profile.id ? (
                 <Link className="btn btn-sm btn-outline-secondary action-btn" to="/settings">
                   <i className="ion-gear-a"></i> Edit Profile Settings
                 </Link>

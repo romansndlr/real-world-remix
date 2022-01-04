@@ -16,7 +16,7 @@ import { db } from "~/utils";
 
 interface ArticleCommentsLoader {
   comments: Array<Comment & { author: User }>;
-  authUser: User;
+  authUser: User | null;
 }
 
 export const loader: LoaderFunction = async ({ params, request }) => {
@@ -69,7 +69,7 @@ const ArticleComments = () => {
               {author.username}
             </Link>
             <span className="date-posted">{new Date(createdAt).toLocaleDateString()}</span>
-            {authUser.id === author.id && (
+            {authUser?.id === author.id && (
               <span className="mod-options">
                 <Form method="post">
                   <input type="hidden" name="commentId" value={id} />
