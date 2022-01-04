@@ -8,26 +8,29 @@ export const action: ActionFunction = async ({ request }) => {
     return redirect("/login");
   }
 
-  const { favorited, articleId, redirectTo } = Object.fromEntries(await request.formData());
+  const { following, authorId, redirectTo } = Object.fromEntries(await request.formData());
 
   if (!redirectTo) {
     return new Response("redirectTo must be set", { status: 400 });
   }
 
-  await db.article.update({
+  await db.user.update({
     where: {
-      id: Number(articleId),
+      id: Number(authorId),
     },
     data: {
-      favorited: !!favorited
+      followers: following
         ? {
-            deleteMany: {
-              userId: Number(userId),
+            delete: {
+              authorId_followerId: {
+                authorId: Number(authorId),
+                followerId: userId,
+              },
             },
           }
         : {
             create: {
-              userId: Number(userId),
+              followerId: userId,
             },
           },
     },

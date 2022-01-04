@@ -1,12 +1,7 @@
 import { PrismaClient, User } from "@prisma/client";
 import { sample } from "lodash";
 import sampleSize from "lodash/sampleSize";
-import {
-  ArticleFactory,
-  CommentFactory,
-  TagFactory,
-  UserFactory,
-} from "../factories";
+import { ArticleFactory, CommentFactory, TagFactory, UserFactory } from "../factories";
 
 const db = new PrismaClient();
 
@@ -26,6 +21,21 @@ async function seed() {
   const allTags = await db.tag.findMany();
 
   for (const user of allUsers) {
+    await db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        following: {
+          createMany: {
+            data: sampleSize(allUsers, 3).map((user) => ({
+              authorId: user.id,
+            })),
+          },
+        },
+      },
+    });
+
     for (const article of ArticleFactory.buildList(3)) {
       const comments = CommentFactory.buildList(3);
       const commentAuthor = sample(allUsers) as User;

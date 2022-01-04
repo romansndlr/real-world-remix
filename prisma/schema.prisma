@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id       Int         @id @default(autoincrement())
-  email    String      @unique
-  username String      @unique
-  password String
-  bio      String?
-  image    String?     @default("https://api.realworld.io/images/smiley-cyrus.jpeg")
-  comments Comment[]
-  articles Article[]
-  favorits Favorites[]
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  username  String      @unique
+  password  String
+  bio       String?
+  image     String?     @default("https://api.realworld.io/images/smiley-cyrus.jpeg")
+  comments  Comment[]
+  articles  Article[]
+  favorites Favorites[]
+  following Follows[]   @relation("Following")
+  followers Follows[]   @relation("Followers")
 }
 
 model Tag {
@@ -57,4 +59,13 @@ model Favorites {
   article   Article @relation(fields: [articleId], references: [id])
 
   @@id([userId, articleId])
+}
+
+model Follows {
+  followerId Int
+  authorId   Int
+  follower   User @relation("Following", fields: [followerId], references: [id])
+  author     User @relation("Followers", fields: [authorId], references: [id])
+
+  @@id([authorId, followerId])
 }

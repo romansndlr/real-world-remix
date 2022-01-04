@@ -1,18 +1,11 @@
-import { Article, Favorites, Tag, User } from "@prisma/client";
-import {
-  json,
-  Link,
-  LoaderFunction,
-  Outlet,
-  redirect,
-  useLoaderData,
-} from "remix";
-import { FavoriteArticleButton } from "~/components";
+import { Article, Favorites, Follows, Tag, User } from "@prisma/client";
+import { json, Link, LoaderFunction, Outlet, redirect, useFetcher, useLoaderData } from "remix";
+import { FavoriteArticleButton, FollowAuthorButton } from "~/components";
 import { getAuthUser } from "~/services";
 import { db } from "~/utils";
 
 interface ArticleLoader {
-  article: Article & { author: User; favorited: Favorites[]; tags: Tag[] };
+  article: Article & { author: User & { followers: Follows[] }; favorited: Favorites[]; tags: Tag[] };
   authUser: User;
 }
 
@@ -30,7 +23,11 @@ export const loader: LoaderFunction = async ({ params, request }) => {
       id: Number(id),
     },
     include: {
-      author: true,
+      author: {
+        include: {
+          followers: true,
+        },
+      },
       favorited: true,
       tags: true,
     },
@@ -42,9 +39,9 @@ export const loader: LoaderFunction = async ({ params, request }) => {
 const Article = () => {
   const { article, authUser } = useLoaderData<ArticleLoader>();
 
-  const isFavorited = article.favorited.find(
-    ({ userId }) => userId === authUser?.id
-  );
+  const isFavorited = article.favorited.find(({ userId }) => userId === authUser?.id);
+
+  const isFollowing = article.author.followers.find(({ followerId }) => followerId === authUser?.id);
 
   const ArticleMeta = () => (
     <div className="article-meta">
@@ -52,19 +49,12 @@ const Article = () => {
         <img src={article.author.image || ""} />
       </Link>
       <div className="info">
-        <Link to={`/profile/${article.author.username}`}>
-          {article.author.username}
-        </Link>
-        <span className="date">
-          {new Date(article.createdAt).toLocaleDateString()}
-        </span>
+        <Link to={`/profile/${article.author.username}`}>{article.author.username}</Link>
+        <span className="date">{new Date(article.createdAt).toLocaleDateString()}</span>
       </div>
       {article.author.id === authUser.id ? (
         <span>
-          <Link
-            className="btn btn-outline-secondary btn-sm"
-            to={`/editor/${article.id}`}
-          >
+          <Link className="btn btn-outline-secondary btn-sm" to={`/editor/${article.id}`}>
             <i className="ion-edit"></i> Edit Article
           </Link>
           &nbsp;&nbsp;
@@ -73,14 +63,16 @@ const Article = () => {
           </button>
         </span>
       ) : (
-        <span>
-          <button className="btn btn-sm btn-outline-secondary">
-            <i className="ion-plus-round"></i>
-            &nbsp; Follow Eric Simons <span className="counter">(10)</span>
-          </button>
-          &nbsp;&nbsp;
+        <span style={{ display: "inline-flex" }}>
+          <FollowAuthorButton
+            isFollowing={!!isFollowing}
+            authorId={article.author.id}
+            followersCount={article.author.followers.length}
+          >
+            {article.author.username}
+          </FollowAuthorButton>
+          &nbsp;
           <FavoriteArticleButton
-            style={{ display: "inline-flex" }}
             articleId={article.id}
             isFavorited={!!isFavorited}
             favoritesCount={`(${article.favorited.length})`}

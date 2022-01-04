@@ -35,9 +35,8 @@ CREATE TABLE "Article" (
 CREATE TABLE "Comment" (
     "id" SERIAL NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "updatedAt" TIMESTAMP(3),
     "body" TEXT NOT NULL,
-    "authorId" TEXT NOT NULL,
     "articleId" INTEGER,
     "userId" INTEGER NOT NULL,
 
@@ -50,6 +49,14 @@ CREATE TABLE "Favorites" (
     "articleId" INTEGER NOT NULL,
 
     CONSTRAINT "Favorites_pkey" PRIMARY KEY ("userId","articleId")
+);
+
+-- CreateTable
+CREATE TABLE "Follows" (
+    "followerId" INTEGER NOT NULL,
+    "authorId" INTEGER NOT NULL,
+
+    CONSTRAINT "Follows_pkey" PRIMARY KEY ("authorId","followerId")
 );
 
 -- CreateTable
@@ -87,6 +94,12 @@ ALTER TABLE "Favorites" ADD CONSTRAINT "Favorites_userId_fkey" FOREIGN KEY ("use
 
 -- AddForeignKey
 ALTER TABLE "Favorites" ADD CONSTRAINT "Favorites_articleId_fkey" FOREIGN KEY ("articleId") REFERENCES "Article"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Follows" ADD CONSTRAINT "Follows_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Follows" ADD CONSTRAINT "Follows_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_ArticleToTag" ADD FOREIGN KEY ("A") REFERENCES "Article"("id") ON DELETE CASCADE ON UPDATE CASCADE;

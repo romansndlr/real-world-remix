@@ -6,9 +6,7 @@ const ArticlePreview: React.FC<{
   article: Article & { author: User; tags: Tag[]; favorited: Favorites[] };
   authUser?: User;
 }> = ({ article, authUser }) => {
-  const isFavorited = article.favorited.find(
-    ({ userId }) => userId === authUser?.id
-  );
+  const isFavorited = article.favorited.find(({ userId }) => userId === authUser?.id);
 
   return (
     <div className="article-preview" key={article.id}>
@@ -20,9 +18,7 @@ const ArticlePreview: React.FC<{
           <Link to={`/profile/${article.author.username}`} className="author">
             {article.author.username}
           </Link>
-          <span className="date">
-            {new Date(article.createdAt).toLocaleDateString()}
-          </span>
+          <span className="date">{new Date(article.createdAt).toLocaleDateString()}</span>
         </div>
         {article.author.id !== authUser?.id && (
           <FavoriteArticleButton
