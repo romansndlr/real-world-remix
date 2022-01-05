@@ -3,6 +3,7 @@ node_modules
 /.cache
 /build
 /public/build
-.env
 /app/sessions
+
+.env
 /prisma/dev.db

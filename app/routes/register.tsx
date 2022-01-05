@@ -1,10 +1,4 @@
-import {
-  ActionFunction,
-  Form,
-  useTransition,
-  json,
-  useActionData,
-} from "remix";
+import { ActionFunction, Form, useTransition, json, useActionData } from "remix";
 import { ErrorMessages } from "~/components";
 import { register } from "~/services";
 import { createSession } from "~/utils";
@@ -19,21 +13,21 @@ interface RegisterAction {
 }
 
 export const action: ActionFunction = async ({ request }) => {
-  const { username, email, password } = Object.fromEntries(
-    await request.formData()
-  );
+  const { username, email, password } = Object.fromEntries(await request.formData());
 
   const values = { username, email, password };
 
   const result = await register(values);
 
   if (result?.data) {
-    createSession(result.data.id);
+    return await createSession(result.data.id);
   }
 
   if (result?.errors) {
     return json({ errors: result.errors, values });
   }
+
+  return null;
 };
 
 export default function Register() {
@@ -79,9 +73,7 @@ export default function Register() {
                     placeholder="Password"
                   />
                 </fieldset>
-                <button className="btn btn-lg btn-primary pull-xs-right">
-                  Sign up
-                </button>
+                <button className="btn btn-lg btn-primary pull-xs-right">Sign up</button>
               </fieldset>
             </Form>
           </div>

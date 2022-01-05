@@ -6,44 +6,33 @@ import { ArticleFactory, CommentFactory, TagFactory, UserFactory } from "../fact
 const db = new PrismaClient();
 
 async function seed() {
-  await db.user.create({
-    data: UserFactory.build({
-      email: "romansndlr@gmail.com",
-      password: "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u", // twixrox
-    }),
-  });
-
-  await db.user.createMany({ data: UserFactory.buildList(10) });
-
-  await db.tag.createMany({ data: TagFactory.buildList(10) });
-
-  const allUsers = await db.user.findMany();
-  const allTags = await db.tag.findMany();
-
-  for (const user of allUsers) {
-    await db.user.update({
-      where: {
-        id: user.id,
-      },
-      data: {
-        following: {
-          createMany: {
-            data: sampleSize(allUsers, 3).map((user) => ({
-              authorId: user.id,
-            })),
-          },
-        },
-      },
+  try {
+    await db.user.create({
+      data: UserFactory.build({
+        email: "romansndlr@gmail.com",
+        password: "$2b$10$K7L1OJ45/4Y2nIvhRVpCe.FSmhDdWoXehVzJptJ/op0lSsvqNu/1u", // twixrox
+      }),
     });
 
-    for (const article of ArticleFactory.buildList(3)) {
-      const comments = CommentFactory.buildList(3);
-      const commentAuthor = sample(allUsers) as User;
+    for (const user of UserFactory.buildList(10)) {
+      await db.user.create({ data: user });
+    }
 
-      try {
-        await db.article.create({
+    for (const tag of TagFactory.buildList(10)) {
+      await db.tag.create({ data: tag });
+    }
+
+    const allUsers = await db.user.findMany();
+    const allTags = await db.tag.findMany();
+
+    for (const user of allUsers) {
+      for (const articleConstructor of ArticleFactory.buildList(3)) {
+        const comments = CommentFactory.buildList(3);
+        const commentAuthor = sample(allUsers) as User;
+
+        const article = await db.article.create({
           data: {
-            ...article,
+            ...articleConstructor,
             author: {
               connect: {
                 id: user.id,
@@ -53,14 +42,6 @@ async function seed() {
               connect: sampleSize(allTags, 3).map((tag) => ({
                 id: tag.id,
               })),
-            },
-            comments: {
-              createMany: {
-                data: comments.map(({ body }) => ({
-                  body,
-                  userId: commentAuthor.id,
-                })),
-              },
             },
             favorited: {
               create: sampleSize(allUsers, 3).map((user) => ({
@@ -73,10 +54,26 @@ async function seed() {
             },
           },
         });
-      } catch (error) {
-        console.error("🚀 ~ file: seed.ts ~ line 62 ~ seed ~ error", error);
+
+        for (const { body } of comments) {
+          await db.article.update({
+            where: {
+              id: article.id,
+            },
+            data: {
+              comments: {
+                create: {
+                  body,
+                  userId: commentAuthor.id,
+                },
+              },
+            },
+          });
+        }
       }
     }
+  } catch (error) {
+    console.error(error);
   }
 }
 

@@ -31,6 +31,7 @@ export default async function (input: RegisterInput) {
         password: bcrypt.hashSync(validated.password, bcrypt.genSaltSync()),
       },
     });
+    console.log("🚀 ~ file: register.server.ts ~ line 34 ~ user", user);
 
     return { data: user };
   } catch (error) {
