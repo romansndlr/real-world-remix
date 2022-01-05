@@ -14,7 +14,7 @@ const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
       {user && (
         <>
           <li className="nav-item">
-            <NavLink prefetch="intent" className="nav-link" to="editor" end>
+            <NavLink prefetch="intent" className="nav-link" to="editor">
               <i className="ion-compose"></i>&nbsp;New Article
             </NavLink>
           </li>
@@ -44,9 +44,7 @@ const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
           <li className="nav-item">
             <NavLink
               prefetch="intent"
-              className={({ isActive }) =>
-                classNames("nav-link", { active: isActive })
-              }
+              className={({ isActive }) => classNames("nav-link", { active: isActive })}
               to="login"
             >
               Sign in
@@ -55,9 +53,7 @@ const NavLinks: React.FC<{ user?: User }> = ({ user }) => {
           <li className="nav-item">
             <NavLink
               prefetch="intent"
-              className={({ isActive }) =>
-                classNames("nav-link", { active: isActive })
-              }
+              className={({ isActive }) => classNames("nav-link", { active: isActive })}
               to="register"
             >
               Sign up
