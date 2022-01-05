@@ -24,15 +24,7 @@ export const loader: LoaderFunction = async ({ request }) => {
         createdAt: "desc",
       },
     ],
-    where: userId
-      ? {
-          author: {
-            NOT: {
-              id: userId,
-            },
-          },
-        }
-      : undefined,
+    where: userId,
     include: {
       author: true,
       tags: true,
@@ -41,15 +33,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   });
 
   const articlesCount = await db.article.count({
-    where: userId
-      ? {
-          author: {
-            NOT: {
-              id: userId,
-            },
-          },
-        }
-      : undefined,
+    where: userId,
   });
 
   if (!userId) {
