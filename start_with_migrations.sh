@@ -1,6 +1,0 @@
-#!/bin/sh
-
-set -ex
-npx prisma migrate deploy
-npx prisma generate
-npm run start
