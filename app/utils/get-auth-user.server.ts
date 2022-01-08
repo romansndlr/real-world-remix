@@ -1,4 +1,6 @@
-import { db, getUserId, logout } from "~/utils";
+import db from "./db.server";
+import getUserId from "./get-user-id.server";
+import logout from "./logout.server";
 
 export default async function (request: Request) {
   const userId = await getUserId(request);

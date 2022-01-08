@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import * as Yup from "yup";
-import { db, ValidationError } from "../utils";
+import db from "./db.server";
+import ValidationError from "./validation-error";
 
 interface LoginInput {
   email: FormDataEntryValue | null;
@@ -31,10 +32,7 @@ export default async function (input: LoginInput) {
       });
     }
 
-    const isCorrectPassword = await bcrypt.compare(
-      validated.password,
-      user.password
-    );
+    const isCorrectPassword = await bcrypt.compare(validated.password, user.password);
 
     if (!isCorrectPassword) {
       throw new ValidationError({
@@ -44,10 +42,7 @@ export default async function (input: LoginInput) {
 
     return { data: user };
   } catch (error) {
-    if (
-      error instanceof Yup.ValidationError ||
-      error instanceof ValidationError
-    ) {
+    if (error instanceof Yup.ValidationError || error instanceof ValidationError) {
       return { errors: error.errors };
     }
 

@@ -2,6 +2,7 @@ import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
 import { db, getUserId } from "~/utils";
+import { latest, paginated } from "~/utils/query-scopes/article";
 
 interface GlobalFeedLoader {
   articles: Array<Article & { author: User; tags: Tag[]; favorited: Favorites[] }>;
@@ -12,18 +13,9 @@ interface GlobalFeedLoader {
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
 
-  const url = new URL(request.url);
-
-  const offset = url.searchParams.get("offset");
-
   const articles = await db.article.findMany({
-    skip: Number(offset),
-    take: 10,
-    orderBy: [
-      {
-        createdAt: "desc",
-      },
-    ],
+    ...paginated(request.url),
+    ...latest(),
     include: {
       author: true,
       tags: true,

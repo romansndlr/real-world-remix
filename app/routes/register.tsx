@@ -1,6 +1,6 @@
 import { ActionFunction, Form, useTransition, json, useActionData } from "remix";
 import { ErrorMessages } from "~/components";
-import { register } from "~/services";
+import { register } from "~/utils";
 import { createSession } from "~/utils";
 
 interface RegisterAction {

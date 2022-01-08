@@ -2,6 +2,7 @@ import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
 import { db } from "~/utils";
+import { latest, paginated, whereAuthorIs } from "~/utils/query-scopes/article";
 
 interface ProfileIndexLoader {
   user: User;
@@ -12,25 +13,16 @@ interface ProfileIndexLoader {
 export const loader: LoaderFunction = async ({ request, params }) => {
   const username = params.username;
 
-  const url = new URL(request.url);
-
-  const offset = url.searchParams.get("offset");
-
   const user = await db.user.findUnique({ where: { username } });
 
+  if (!user) {
+    return json(`Can't find a user with the username: ${username}`, 400);
+  }
+
   const articles = await db.article.findMany({
-    skip: Number(offset),
-    take: 10,
-    orderBy: [
-      {
-        createdAt: "desc",
-      },
-    ],
-    where: {
-      author: {
-        id: user?.id,
-      },
-    },
+    ...paginated(request.url),
+    ...latest(),
+    ...whereAuthorIs(user.id),
     include: {
       author: true,
       tags: true,
@@ -38,13 +30,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     },
   });
 
-  const articlesCount = await db.article.count({
-    where: {
-      author: {
-        id: user?.id,
-      },
-    },
-  });
+  const articlesCount = await db.article.count(whereAuthorIs(user.id));
 
   return json({ user, articles, articlesCount });
 };

@@ -2,7 +2,8 @@ import { Article, Favorites, Tag, User } from "@prisma/client";
 import { json, LoaderFunction, useLoaderData } from "remix";
 import { ArticleList } from "~/components";
 import { db, getUserId } from "~/utils";
-import { getAuthUser } from "~/services";
+import { getAuthUser } from "~/utils";
+import { latest, paginated, whereFollowedBy } from "~/utils/query-scopes/article";
 
 interface MyFeedLoader {
   articles: Array<Article & { author: User; tags: Tag[]; favorited: Favorites[] }>;
@@ -13,45 +14,18 @@ interface MyFeedLoader {
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
 
-  const url = new URL(request.url);
-
-  const offset = url.searchParams.get("offset");
-
   const articles = await db.article.findMany({
-    skip: Number(offset),
-    take: 10,
-    orderBy: [
-      {
-        createdAt: "desc",
-      },
-    ],
-    where: {
-      author: {
-        followers: {
-          some: {
-            followerId: userId,
-          },
-        },
-      },
-    },
+    ...paginated(request.url),
+    ...latest(),
+    ...(await whereFollowedBy(userId)),
     include: {
-      author: true,
       tags: true,
+      author: true,
       favorited: true,
     },
   });
 
-  const articlesCount = await db.article.count({
-    where: {
-      author: {
-        followers: {
-          some: {
-            followerId: userId,
-          },
-        },
-      },
-    },
-  });
+  const articlesCount = await db.article.count(await whereFollowedBy(userId));
 
   const user = await getAuthUser(request);
 

@@ -1,7 +1,7 @@
 import { Follows, User } from "@prisma/client";
 import { json, Link, LoaderFunction, NavLink, Outlet, useLoaderData, useParams } from "remix";
 import { FollowAuthorButton } from "~/components";
-import { getAuthUser } from "~/services";
+import { getAuthUser } from "~/utils";
 import { db } from "~/utils";
 
 interface ProfileLoader {

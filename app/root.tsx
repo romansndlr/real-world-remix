@@ -1,7 +1,7 @@
 import { json, LoaderFunction, Outlet, useLoaderData } from "remix";
 import type { LinksFunction } from "remix";
 import { NavLinks, Document, Layout } from "./components";
-import { getAuthUser } from "./services";
+import { getAuthUser } from "./utils";
 
 export const links: LinksFunction = () => {
   return [

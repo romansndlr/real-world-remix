@@ -11,7 +11,7 @@ import {
   useLoaderData,
   useTransition,
 } from "remix";
-import { getAuthUser } from "~/services";
+import { getAuthUser } from "~/utils";
 import { db } from "~/utils";
 
 interface ArticleCommentsLoader {

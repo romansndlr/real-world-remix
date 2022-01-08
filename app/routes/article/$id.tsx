@@ -1,7 +1,7 @@
 import { Article, Favorites, Follows, Tag, User } from "@prisma/client";
 import { Form, json, Link, LoaderFunction, Outlet, redirect, useLoaderData } from "remix";
 import { FavoriteArticleButton, FollowAuthorButton } from "~/components";
-import { getAuthUser } from "~/services";
+import { getAuthUser } from "~/utils";
 import { db } from "~/utils";
 
 interface ArticleLoader {

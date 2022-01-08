@@ -1,18 +1,10 @@
 import * as React from "react";
 import { User } from "@prisma/client";
-import {
-  ActionFunction,
-  Form,
-  json,
-  LoaderFunction,
-  useActionData,
-  useLoaderData,
-  useTransition,
-} from "remix";
+import { ActionFunction, Form, json, LoaderFunction, useActionData, useLoaderData, useTransition } from "remix";
 import * as Yup from "yup";
 import { ErrorMessages } from "~/components";
 import { db, getUserId } from "~/utils";
-import { getAuthUser } from "~/services";
+import { getAuthUser } from "~/utils";
 
 interface SettingsLoader {
   user: User;
@@ -50,16 +42,12 @@ export const loader: LoaderFunction = async ({ request }) => {
 export const action: ActionFunction = async ({ request }) => {
   const userId = await getUserId(request);
 
-  const { username, email, password, bio, image } = Object.fromEntries(
-    await request.formData()
-  );
+  const { username, email, password, bio, image } = Object.fromEntries(await request.formData());
 
   const values = { username, email, bio, image };
 
   try {
-    const validated = await validationSchema.validateSync(
-      password ? { ...values, password } : values
-    );
+    const validated = await validationSchema.validateSync(password ? { ...values, password } : values);
 
     await db.user.update({
       where: {
@@ -109,9 +97,7 @@ const Settings: React.FC = () => {
                 </fieldset>
                 <fieldset className="form-group" disabled={!!submission}>
                   <input
-                    defaultValue={
-                      actionData?.values.username || user.username || ""
-                    }
+                    defaultValue={actionData?.values.username || user.username || ""}
                     name="username"
                     className="form-control form-control-lg"
                     type="text"
@@ -146,22 +132,14 @@ const Settings: React.FC = () => {
                     placeholder="Password"
                   />
                 </fieldset>
-                <button
-                  disabled={!!submission}
-                  type="submit"
-                  className="btn btn-lg btn-primary pull-xs-right"
-                >
+                <button disabled={!!submission} type="submit" className="btn btn-lg btn-primary pull-xs-right">
                   Update Settings
                 </button>
               </fieldset>
             </Form>
             <hr />
             <Form method="post" action="/logout" reloadDocument>
-              <button
-                type="submit"
-                className="btn btn-outline-danger"
-                disabled={!!submission}
-              >
+              <button type="submit" className="btn btn-outline-danger" disabled={!!submission}>
                 Or click here to logout.
               </button>
             </Form>

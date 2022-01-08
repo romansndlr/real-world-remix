@@ -1,12 +1,6 @@
-import {
-  ActionFunction,
-  Form,
-  json,
-  useActionData,
-  useTransition,
-} from "remix";
+import { ActionFunction, Form, json, useActionData, useTransition } from "remix";
 import { ErrorMessages } from "~/components";
-import { login } from "~/services";
+import { login } from "~/utils";
 import { createSession } from "~/utils";
 
 interface LoginAction {
@@ -65,10 +59,7 @@ export default function Login() {
                     placeholder="Password"
                   />
                 </fieldset>
-                <button
-                  type="submit"
-                  className="btn btn-lg btn-primary pull-xs-right"
-                >
+                <button type="submit" className="btn btn-lg btn-primary pull-xs-right">
                   Sign in
                 </button>
               </fieldset>

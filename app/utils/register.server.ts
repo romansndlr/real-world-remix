@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { snakeCase } from "lodash";
 import * as Yup from "yup";
-import { db } from "../utils";
+import db from "./db.server";
 
 interface RegisterInput {
   email: FormDataEntryValue | null;

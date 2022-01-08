@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import React from "react";
 import { ActionFunction, json, Link, LoaderFunction, useFetcher, useLoaderData } from "remix";
-import { getAuthUser } from "~/services";
+import { getAuthUser } from "~/utils";
 import { db } from "~/utils";
 
 interface NewCommentLoader {
