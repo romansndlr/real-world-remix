@@ -8,3 +8,4 @@ export { default as getUserId } from "./get-user-id.server";
 export { default as login } from "./login.server";
 export { default as logout } from "./logout.server";
 export { default as register } from "./register.server";
+export { default as parse } from "./parse.server";
