@@ -1,16 +1,6 @@
 import { Comment, User } from "@prisma/client";
 import { orderBy } from "lodash";
-import {
-  ActionFunction,
-  Form,
-  json,
-  Link,
-  LoaderFunction,
-  Outlet,
-  redirect,
-  useLoaderData,
-  useTransition,
-} from "remix";
+import { ActionFunction, json, Link, LoaderFunction, Outlet, useFetcher, useLoaderData } from "remix";
 import { getAuthUser } from "~/utils";
 import { db } from "~/utils";
 
@@ -39,18 +29,18 @@ export const loader: LoaderFunction = async ({ params, request }) => {
 export const action: ActionFunction = async ({ request, params }) => {
   const { commentId } = Object.fromEntries(await request.formData());
 
-  await db.comment.delete({
+  const comment = await db.comment.delete({
     where: {
       id: Number(commentId),
     },
   });
 
-  return redirect(`/article/${params.id}/comments/new`);
+  return json({ comment });
 };
 
 const ArticleComments = () => {
   const { comments, authUser } = useLoaderData<ArticleCommentsLoader>();
-  const { submission } = useTransition();
+  const { submission, Form } = useFetcher();
 
   return (
     <div>
@@ -71,7 +61,7 @@ const ArticleComments = () => {
             <span className="date-posted">{new Date(createdAt).toLocaleDateString()}</span>
             {authUser?.id === author.id && (
               <span className="mod-options">
-                <Form method="post">
+                <Form replace method="post">
                   <input type="hidden" name="commentId" value={id} />
                   <button disabled={!!submission} type="submit" style={{ border: "none", background: "none" }}>
                     <i className="ion-trash-a"></i>

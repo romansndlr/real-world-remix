@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import { FC } from "react";
-import { Form, useLocation, useTransition } from "remix";
+import { Form, useFetcher } from "remix";
 
 interface FollowAuthorButtonProps {
   authorId: number;
@@ -16,14 +16,12 @@ const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({
   children,
   className,
 }) => {
-  const { submission } = useTransition();
-  const location = useLocation();
+  const { Form, submission } = useFetcher();
 
   return (
     <Form method="post" action={`/profile/${authorId}/follow`}>
       <input type="hidden" name="authorId" value={authorId} />
       <input type="hidden" name="following" value={isFollowing ? "1" : ""} />
-      <input type="hidden" name="redirectTo" value={location.pathname} />
       <button
         disabled={!!submission}
         type="submit"
@@ -43,7 +41,7 @@ const FollowAuthorButton: FC<FollowAuthorButtonProps> = ({
           })}
         ></i>
         &nbsp; {isFollowing ? "Unfollow" : "Follow"} {children}{" "}
-        {followersCount && <span className="counter">({followersCount})</span>}
+        {!!followersCount && followersCount > 0 && <span className="counter">({followersCount})</span>}
       </button>
     </Form>
   );

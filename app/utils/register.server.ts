@@ -20,6 +20,7 @@ const validationSchema = Yup.object({
 
 export default async function (input: RegisterInput) {
   try {
+    // TODO: Find a way to validate unique email
     const validated = validationSchema.validateSync(input, {
       abortEarly: false,
     });

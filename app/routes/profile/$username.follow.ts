@@ -1,4 +1,4 @@
-import { ActionFunction, redirect } from "remix";
+import { ActionFunction, json, redirect } from "remix";
 import { db, getUserId } from "~/utils";
 
 export const action: ActionFunction = async ({ request }) => {
@@ -8,13 +8,9 @@ export const action: ActionFunction = async ({ request }) => {
     return redirect("/login");
   }
 
-  const { following, authorId, redirectTo } = Object.fromEntries(await request.formData());
+  const { following, authorId } = Object.fromEntries(await request.formData());
 
-  if (!redirectTo) {
-    return new Response("redirectTo must be set", { status: 400 });
-  }
-
-  await db.user.update({
+  const user = await db.user.update({
     where: {
       id: Number(authorId),
     },
@@ -36,5 +32,5 @@ export const action: ActionFunction = async ({ request }) => {
     },
   });
 
-  return redirect(String(redirectTo));
+  return json({ user });
 };

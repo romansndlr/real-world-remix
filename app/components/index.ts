@@ -11,3 +11,4 @@ export { default as FavoriteArticleButton } from "./favorite-article-button";
 export { default as TagsInput } from "./tags-input";
 export { default as ArticleForm } from "./article-form";
 export { default as FollowAuthorButton } from "./follow-author-button";
+export { default as ArticleMeta } from "./article-meta";
