@@ -1,12 +1,4 @@
-import {
-  useParams,
-  json,
-  Link,
-  LoaderFunction,
-  NavLink,
-  useLoaderData,
-  Outlet,
-} from "remix";
+import { useParams, json, Link, LoaderFunction, NavLink, useLoaderData, Outlet } from "remix";
 import { Tag } from "@prisma/client";
 import { db, getUserId } from "~/utils";
 
@@ -42,31 +34,19 @@ export default function Home() {
               <ul className="nav nav-pills outline-active">
                 {userId && (
                   <li className="nav-item">
-                    <NavLink
-                      prefetch="intent"
-                      to="/feed/my"
-                      className="nav-link"
-                    >
+                    <NavLink prefetch="intent" to="/feed/my" className="nav-link">
                       My Feed
                     </NavLink>
                   </li>
                 )}
                 <li className="nav-item">
-                  <NavLink
-                    prefetch="intent"
-                    to="/feed/global"
-                    className="nav-link"
-                  >
+                  <NavLink prefetch="intent" to="/feed/global" className="nav-link">
                     Global Feed
                   </NavLink>
                 </li>
                 {tag && (
                   <li className="nav-item">
-                    <NavLink
-                      prefetch="intent"
-                      to={`/feed/tag/${tag}`}
-                      className="nav-link active"
-                    >
+                    <NavLink prefetch="intent" to={`/feed/tag/${tag}`} className="nav-link active">
                       # {tag}
                     </NavLink>
                   </li>
@@ -81,11 +61,7 @@ export default function Home() {
               <div className="tag-list">
                 {tags.length === 0 && <p>No tags are here... yet.</p>}
                 {tags.map((tag, i) => (
-                  <Link
-                    to={`/feed/tag/${tag.name}`}
-                    className="tag-pill tag-default"
-                    key={i}
-                  >
+                  <Link to={`/feed/tag/${tag.name}`} className="tag-pill tag-default" key={i}>
                     {tag.name}
                   </Link>
                 ))}

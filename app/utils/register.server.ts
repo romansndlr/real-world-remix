@@ -20,10 +20,19 @@ const validationSchema = Yup.object({
 
 export default async function (input: RegisterInput) {
   try {
-    // TODO: Find a way to validate unique email
     const validated = validationSchema.validateSync(input, {
       abortEarly: false,
     });
+
+    const userExists = await db.user.findUnique({ where: { email: validated.email } });
+
+    if (userExists) {
+      return {
+        errors: {
+          email: `This email already exists`,
+        },
+      };
+    }
 
     const user = await db.user.create({
       data: {
